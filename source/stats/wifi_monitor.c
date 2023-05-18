@@ -2595,6 +2595,8 @@ int process_instant_msmt_monitor(void *arg)
         stream_client_msmt_data(false);
     }
 
+    free(event);
+
     return TIMER_TASK_COMPLETE;
 }
 
