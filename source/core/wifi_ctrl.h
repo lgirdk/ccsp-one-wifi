@@ -110,6 +110,7 @@ extern "C" {
 
 //This is a dummy string if the value is not passed.
 #define INVALID_KEY                      "12345678"
+#define INVALID_IP_STRING                "0.0.0.0"
 
 typedef enum {
     rbus_bool_data,
