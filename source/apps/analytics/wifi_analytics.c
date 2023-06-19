@@ -34,7 +34,7 @@
 #include "wifi_monitor.h"
 #include <rbus.h>
 #include <sys/resource.h>
-
+#include "wifi_monitor.h"
 const char *subdoc_type_to_string(webconfig_subdoc_type_t type)
 {
 #define	DOC2S(x) case x: return #x;
