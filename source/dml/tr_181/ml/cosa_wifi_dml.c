@@ -8797,7 +8797,32 @@ ConnectionControl_GetParamStringValue
         ULONG*                      pUlSize
     )
 {
-    return ANSC_STATUS_SUCCESS;
+    wifi_vap_info_t *pcfg = (wifi_vap_info_t *)hInsContext;
+
+    if (pcfg == NULL)
+    {
+        wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Null pointer get fail\n", __FUNCTION__,__LINE__);
+        return FALSE;
+    }
+
+    if (isVapSTAMesh(pcfg->vap_index)) {
+        return FALSE;
+    }
+
+    /* check the parameter name and return the corresponding value */
+    if( AnscEqualString(ParamName, "ClientForceDisassociation", TRUE))
+    {
+        snprintf(pValue,*pUlSize,pcfg->u.bss_info.postassoc.client_force_disassoc_info);
+        return 0;
+    }
+
+    if( AnscEqualString(ParamName, "ClientDenyAssociation", TRUE))
+    {
+        snprintf(pValue,*pUlSize,pcfg->u.bss_info.preassoc.client_deny_assoc_info);
+        return 0;
+    }
+
+    return -1;
 }
 
 /**********************************************************************
@@ -9525,7 +9550,7 @@ PreAssocDeny_SetParamStringValue
         }
 
         if (strcmp(pString, "disabled") == 0) {
-            strcpy(vapInfo->u.bss_info.preassoc.rssi_up_threshold, "disabled");
+            strncpy(vapInfo->u.bss_info.preassoc.rssi_up_threshold, "disabled", sizeof(vapInfo->u.bss_info.preassoc.rssi_up_threshold));
             set_cac_cache_changed(instance_number - 1);
             return TRUE;
         }
@@ -9534,7 +9559,7 @@ PreAssocDeny_SetParamStringValue
 
         /*String should be in format of range between two integers*/
         if (ret != 1) {
-            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d %s Incorrect format. Example: -90 to -50\n", __FUNCTION__,__LINE__);
+            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Incorrect format. Example: -90 to -50\n", __FUNCTION__,__LINE__);
             return FALSE;
         }
 
@@ -9543,7 +9568,7 @@ PreAssocDeny_SetParamStringValue
             return FALSE;
         }
 
-        strcpy(vapInfo->u.bss_info.preassoc.rssi_up_threshold, pString);
+        strncpy(vapInfo->u.bss_info.preassoc.rssi_up_threshold, pString, sizeof(vapInfo->u.bss_info.preassoc.rssi_up_threshold));
         set_cac_cache_changed(instance_number - 1);
         return TRUE;
     }
@@ -9555,7 +9580,7 @@ PreAssocDeny_SetParamStringValue
         }
 
         if (strcmp(pString, "disabled") == 0) {
-            strcpy(vapInfo->u.bss_info.preassoc.snr_threshold, "disabled");
+            strncpy(vapInfo->u.bss_info.preassoc.snr_threshold, "disabled", sizeof(vapInfo->u.bss_info.preassoc.snr_threshold));
             set_cac_cache_changed(instance_number - 1);
             return TRUE;
         }
@@ -9564,16 +9589,16 @@ PreAssocDeny_SetParamStringValue
 
         /*String should be in format of range between two integers*/
         if (ret != 1) {
-            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d %s Incorrect format. Example: 10 to 100\n", __FUNCTION__,__LINE__);
+            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Incorrect format. Example: 10 to 100\n", __FUNCTION__,__LINE__);
             return FALSE;
         }
 
         if (val < 10 || val > 100) {
-            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d %s Value is out of supported range\n", __FUNCTION__,__LINE__);
+            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Value is out of supported range\n", __FUNCTION__,__LINE__);
             return FALSE;
         }
 
-        strcpy(vapInfo->u.bss_info.preassoc.snr_threshold, pString);
+        strncpy(vapInfo->u.bss_info.preassoc.snr_threshold, pString, sizeof(vapInfo->u.bss_info.preassoc.snr_threshold));
         set_cac_cache_changed(instance_number - 1);
         return TRUE;
     }
@@ -9586,7 +9611,7 @@ PreAssocDeny_SetParamStringValue
         }
 
         if (strcmp(pString, "disabled") == 0) {
-            strcpy(vapInfo->u.bss_info.preassoc.cu_threshold, "disabled");
+            strncpy(vapInfo->u.bss_info.preassoc.cu_threshold, "disabled", sizeof(vapInfo->u.bss_info.preassoc.cu_threshold));
             set_cac_cache_changed(instance_number - 1);
             return TRUE;
         }
@@ -9595,16 +9620,16 @@ PreAssocDeny_SetParamStringValue
 
         /*String should be in format of range between two integers*/
         if (ret != 1) {
-            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d %s Incorrect format. Example: 10 to 100\n", __FUNCTION__,__LINE__);
+            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Incorrect format. Example: 10 to 100\n", __FUNCTION__,__LINE__);
             return FALSE;
         }
 
         if (val < 0 || val > 100) {
-            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d %s Value is out of supported range\n", __FUNCTION__,__LINE__);
+            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Value is out of supported range\n", __FUNCTION__,__LINE__);
             return FALSE;
         }
 
-        strcpy(vapInfo->u.bss_info.preassoc.cu_threshold, pString);
+        strncpy(vapInfo->u.bss_info.preassoc.cu_threshold, pString, sizeof(vapInfo->u.bss_info.preassoc.cu_threshold));
         set_cac_cache_changed(instance_number - 1);
         return TRUE;
     }
@@ -9618,7 +9643,7 @@ PreAssocDeny_SetParamStringValue
         }
           
         if (strcmp(pString, "disabled") == 0) {
-          strcpy(vapInfo->u.bss_info.preassoc.basic_data_transmit_rates, "disabled");
+          strncpy(vapInfo->u.bss_info.preassoc.basic_data_transmit_rates, "disabled", sizeof(vapInfo->u.bss_info.preassoc.basic_data_transmit_rates));
           set_cac_cache_changed(instance_number - 1);
           set_dml_cache_vap_config_changed(instance_number - 1);
           return TRUE;
@@ -9629,7 +9654,7 @@ PreAssocDeny_SetParamStringValue
             wifi_util_dbg_print(WIFI_DMCLI,"%s:%d %s Invalid value\n", __FUNCTION__,__LINE__,pString);
             return FALSE;
           }
-          strcpy(vapInfo->u.bss_info.preassoc.basic_data_transmit_rates, pString);
+          strncpy(vapInfo->u.bss_info.preassoc.basic_data_transmit_rates, pString, sizeof(vapInfo->u.bss_info.preassoc.basic_data_transmit_rates));
           set_cac_cache_changed(instance_number - 1);
           set_dml_cache_vap_config_changed(instance_number - 1);
           return TRUE;
@@ -9647,7 +9672,7 @@ PreAssocDeny_SetParamStringValue
         }
 
         if (strcmp(pString, "disabled") == 0) {
-            strcpy(vapInfo->u.bss_info.preassoc.operational_data_transmit_rates, "disabled");
+            strncpy(vapInfo->u.bss_info.preassoc.operational_data_transmit_rates, "disabled", sizeof(vapInfo->u.bss_info.preassoc.operational_data_transmit_rates));
             set_cac_cache_changed(instance_number - 1);
             set_dml_cache_vap_config_changed(instance_number - 1);
             return TRUE;
@@ -9659,7 +9684,7 @@ PreAssocDeny_SetParamStringValue
             return FALSE;
           }
 
-          strcpy(vapInfo->u.bss_info.preassoc.operational_data_transmit_rates, pString);
+          strncpy(vapInfo->u.bss_info.preassoc.operational_data_transmit_rates, pString, sizeof(vapInfo->u.bss_info.preassoc.operational_data_transmit_rates));
           set_cac_cache_changed(instance_number - 1);
           set_dml_cache_vap_config_changed(instance_number - 1);
           return TRUE;
@@ -9675,7 +9700,7 @@ PreAssocDeny_SetParamStringValue
         }
 
         if (strcmp(pString, "disabled") == 0) {
-            strcpy(vapInfo->u.bss_info.preassoc.supported_data_transmit_rates, "disabled");
+            strncpy(vapInfo->u.bss_info.preassoc.supported_data_transmit_rates, "disabled", sizeof(vapInfo->u.bss_info.preassoc.supported_data_transmit_rates));
             set_cac_cache_changed(instance_number - 1);
             set_dml_cache_vap_config_changed(instance_number - 1);
             return TRUE;
@@ -9687,7 +9712,7 @@ PreAssocDeny_SetParamStringValue
             return FALSE;
           }
 
-          strcpy(vapInfo->u.bss_info.preassoc.supported_data_transmit_rates, pString);
+          strncpy(vapInfo->u.bss_info.preassoc.supported_data_transmit_rates, pString, sizeof(vapInfo->u.bss_info.preassoc.supported_data_transmit_rates));
           set_cac_cache_changed(instance_number - 1);
           set_dml_cache_vap_config_changed(instance_number - 1);
           return TRUE;
@@ -9703,7 +9728,7 @@ PreAssocDeny_SetParamStringValue
         }
 
         if (strcmp(pString, "disabled") == 0) {
-            strcpy(vapInfo->u.bss_info.preassoc.minimum_advertised_mcs, "disabled");
+            strncpy(vapInfo->u.bss_info.preassoc.minimum_advertised_mcs, "disabled", sizeof(vapInfo->u.bss_info.preassoc.minimum_advertised_mcs));
             set_cac_cache_changed(instance_number - 1);
             set_dml_cache_vap_config_changed(instance_number - 1);
             return TRUE;
@@ -9721,7 +9746,7 @@ PreAssocDeny_SetParamStringValue
           return FALSE;
         }
 
-        strcpy(vapInfo->u.bss_info.preassoc.minimum_advertised_mcs, pString);
+        strncpy(vapInfo->u.bss_info.preassoc.minimum_advertised_mcs, pString, sizeof(vapInfo->u.bss_info.preassoc.minimum_advertised_mcs));
         set_cac_cache_changed(instance_number - 1);
         set_dml_cache_vap_config_changed(instance_number - 1);
         return TRUE;
@@ -9735,12 +9760,12 @@ PreAssocDeny_SetParamStringValue
         }
 
         if (strcmp(pString, "disabled") == 0) {
-            strcpy(vapInfo->u.bss_info.preassoc.sixGOpInfoMinRate, "disabled");
+            strncpy(vapInfo->u.bss_info.preassoc.sixGOpInfoMinRate, "disabled", sizeof(vapInfo->u.bss_info.preassoc.sixGOpInfoMinRate));
             set_cac_cache_changed(instance_number - 1);
             set_dml_cache_vap_config_changed(instance_number - 1);
             return TRUE;
         }
-        strcpy(vapInfo->u.bss_info.preassoc.sixGOpInfoMinRate, pString);
+        strncpy(vapInfo->u.bss_info.preassoc.sixGOpInfoMinRate, pString, sizeof(vapInfo->u.bss_info.preassoc.sixGOpInfoMinRate));
         set_cac_cache_changed(instance_number - 1);
         set_dml_cache_vap_config_changed(instance_number - 1);
         return TRUE;
@@ -10310,7 +10335,7 @@ PostAssocDisc_SetParamStringValue
         }
 
         if (strcmp(pString, "disabled") == 0) {
-            strcpy(vapInfo->u.bss_info.postassoc.rssi_up_threshold, "disabled");
+            strncpy(vapInfo->u.bss_info.postassoc.rssi_up_threshold, "disabled", sizeof(vapInfo->u.bss_info.postassoc.rssi_up_threshold));
             set_cac_cache_changed(instance_number - 1);
             return TRUE;
         }
@@ -10319,16 +10344,16 @@ PostAssocDisc_SetParamStringValue
 
         /*String should be in format of range between two integers*/
         if (ret != 1) {
-            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d %s Incorrect format. Example: 10 to 100\n", __FUNCTION__,__LINE__);
+            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Incorrect format. Example: 10 to 100\n", __FUNCTION__,__LINE__);
             return FALSE;
         }
 
         if (val > -50 || val < -95) {
-            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d %s Value is out of supported range\n", __FUNCTION__,__LINE__);
+            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Value is out of supported range\n", __FUNCTION__,__LINE__);
             return FALSE;
         }
 
-        strcpy(vapInfo->u.bss_info.postassoc.rssi_up_threshold, pString);
+        strncpy(vapInfo->u.bss_info.postassoc.rssi_up_threshold, pString, sizeof(vapInfo->u.bss_info.postassoc.rssi_up_threshold));
         set_cac_cache_changed(instance_number - 1);
         return TRUE;
     }
@@ -10343,16 +10368,16 @@ PostAssocDisc_SetParamStringValue
 
         /*String should be in format of range between two integers*/
         if (ret != 1) {
-            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d %s Incorrect format. Example: 10 to 100\n", __FUNCTION__,__LINE__);
+            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Incorrect format. Example: 10 to 100\n", __FUNCTION__,__LINE__);
             return FALSE;
         }
 
         if (val < 1 || val > 10) {
-            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d %s Value is out of supported range\n", __FUNCTION__,__LINE__);
+            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Value is out of supported range\n", __FUNCTION__,__LINE__);
             return FALSE;
         }
 
-        strcpy(vapInfo->u.bss_info.postassoc.sampling_interval, pString);
+        strncpy(vapInfo->u.bss_info.postassoc.sampling_interval, pString, sizeof(vapInfo->u.bss_info.postassoc.sampling_interval));
         set_cac_cache_changed(instance_number - 1);
         return TRUE;
     }
@@ -10364,7 +10389,7 @@ PostAssocDisc_SetParamStringValue
         }
 
         if (strcmp(pString, "disabled") == 0) {
-            strcpy(vapInfo->u.bss_info.postassoc.snr_threshold, "disabled");
+            strncpy(vapInfo->u.bss_info.postassoc.snr_threshold, "disabled", sizeof(vapInfo->u.bss_info.postassoc.snr_threshold));
             set_cac_cache_changed(instance_number - 1);
             return TRUE;
         }
@@ -10373,16 +10398,16 @@ PostAssocDisc_SetParamStringValue
 
         /*String should be in format of range between two integers*/
         if (ret != 1) {
-            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d %s Incorrect format. Example: 10 to 100\n", __FUNCTION__,__LINE__);
+            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Incorrect format. Example: 10 to 100\n", __FUNCTION__,__LINE__);
             return FALSE;
         }
 
         if (val < 10 || val > 100) {
-            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d %s Value is out of supported range\n", __FUNCTION__,__LINE__);
+            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Value is out of supported range\n", __FUNCTION__,__LINE__);
             return FALSE;
         }
 
-        strcpy(vapInfo->u.bss_info.postassoc.snr_threshold, pString);
+        strncpy(vapInfo->u.bss_info.postassoc.snr_threshold, pString, sizeof(vapInfo->u.bss_info.postassoc.snr_threshold));
         set_cac_cache_changed(instance_number - 1);
         return TRUE;
     }
@@ -10406,7 +10431,7 @@ PostAssocDisc_SetParamStringValue
             return FALSE;
         }
 
-        strcpy(vapInfo->u.bss_info.postassoc.sampling_count, pString);
+        strncpy(vapInfo->u.bss_info.postassoc.sampling_count, pString, sizeof(vapInfo->u.bss_info.postassoc.sampling_count));
         set_cac_cache_changed(instance_number - 1);
         return TRUE;
     }
@@ -10418,7 +10443,7 @@ PostAssocDisc_SetParamStringValue
         }
 
         if (strcmp(pString, "disabled") == 0) {
-            strcpy(vapInfo->u.bss_info.postassoc.cu_threshold, "disabled");
+            strncpy(vapInfo->u.bss_info.postassoc.cu_threshold, "disabled", sizeof(vapInfo->u.bss_info.postassoc.cu_threshold));
             set_cac_cache_changed(instance_number - 1);
             return TRUE;
         }
@@ -10427,16 +10452,16 @@ PostAssocDisc_SetParamStringValue
 
         /*String should be in format of range between two integers*/
         if (ret != 1) {
-            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d %s Incorrect format. Example: 10 to 100\n", __FUNCTION__,__LINE__);
+            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Incorrect format. Example: 10 to 100\n", __FUNCTION__,__LINE__);
             return FALSE;
         }
 
         if (val < 10 || val > 100) {
-            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d %s Value is out of supported range\n", __FUNCTION__,__LINE__);
+            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Value is out of supported range\n", __FUNCTION__,__LINE__);
             return FALSE;
         }
 
-        strcpy(vapInfo->u.bss_info.postassoc.cu_threshold, pString);
+        strncpy(vapInfo->u.bss_info.postassoc.cu_threshold, pString, sizeof(vapInfo->u.bss_info.postassoc.cu_threshold));
         set_cac_cache_changed(instance_number - 1);
         return TRUE;
     }
