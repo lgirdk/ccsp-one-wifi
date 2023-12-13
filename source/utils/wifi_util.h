@@ -281,4 +281,5 @@ int convert_ascii_string_to_bool(char *l_string, bool *l_bool_param);
 int convert_bool_to_ascii_string(bool l_bool_param, char *l_string, size_t str_len);
 void json_param_obscure(char *json, char *param);
 bool is_5g_20M_channel_in_dfs(int channel);
+char *get_assoc_devices_blob();
 #endif//_WIFI_UTIL_H_
