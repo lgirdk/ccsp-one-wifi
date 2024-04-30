@@ -840,6 +840,7 @@ webconfig_error_t translator_ovsdb_init(webconfig_subdoc_data_t *data)
             sizeof(default_vap_info->u.bss_info.interworking.interworking.hessid),
             "11:22:33:44:55:66");
         convert_radio_index_to_freq_band(&hal_cap->wifi_prop, radioIndx, &band);
+        default_vap_info->u.bss_info.mbo_enabled = true;
 
         if (is_vap_private(&hal_cap->wifi_prop, vapIndex) == TRUE) {
             default_vap_info->u.bss_info.network_initiated_greylist = false;
@@ -869,6 +870,7 @@ webconfig_error_t translator_ovsdb_init(webconfig_subdoc_data_t *data)
             memset(wps_pin, 0, sizeof(wps_pin));
             strcpy(default_vap_info->u.bss_info.wps.pin, INVALID_KEY);
             default_vap_info->u.bss_info.showSsid = true;
+            default_vap_info->u.bss_info.mbo_enabled = false;
 
         } else if(is_vap_mesh_backhaul(&hal_cap->wifi_prop, vapIndex) == TRUE) {
             default_vap_info->u.bss_info.vapStatsEnable = false;

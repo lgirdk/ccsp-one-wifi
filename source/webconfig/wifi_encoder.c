@@ -386,6 +386,13 @@ webconfig_error_t encode_vap_common_object(const wifi_vap_info_t *vap_info,
 
     //conncted_building_enabled
     cJSON_AddBoolToObject(vap_object, "Connected_building_enabled", vap_info->u.bss_info.connected_building_enabled);
+
+    // HostapMgtFrameCtrl
+    cJSON_AddBoolToObject(vap_object, "HostapMgtFrameCtrl",
+        vap_info->u.bss_info.hostap_mgt_frame_ctrl);
+
+    cJSON_AddBoolToObject(vap_object, "MboEnabled", vap_info->u.bss_info.mbo_enabled);
+
     return webconfig_error_none;
 }
 

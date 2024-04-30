@@ -1594,6 +1594,14 @@ int validate_vap(const cJSON *vap, wifi_vap_info_t *vap_info, wifi_platform_prop
         // BeaconRateCtl
         validate_param_string(vap, "BeaconRateCtl", param);
         strcpy(vap_info->u.bss_info.beaconRateCtl, param->valuestring);
+
+        // HostapMgtFrameCtrl
+        validate_param_bool(vap, "HostapMgtFrameCtrl", param);
+        vap_info->u.bss_info.hostap_mgt_frame_ctrl = (param->type & cJSON_True) ? true : false;
+
+        validate_param_bool(vap, "MboEnabled", param);
+        vap_info->u.bss_info.mbo_enabled = (param->type & cJSON_True) ? true : false;
+
         INT apIndex = 0;
         apIndex = convert_vap_name_to_index(wifi_prop, vap_info->vap_name);
         if (apIndex != -1)

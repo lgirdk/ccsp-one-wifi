@@ -1617,6 +1617,13 @@ webconfig_error_t decode_vap_common_object(const cJSON *vap, wifi_vap_info_t *va
         vap_info->u.bss_info.connected_building_enabled = (param->type & cJSON_True) ? true:false;
     }
 
+    // HostapMgtFrameCtrl
+    decode_param_bool(vap, "HostapMgtFrameCtrl", param);
+    vap_info->u.bss_info.hostap_mgt_frame_ctrl = (param->type & cJSON_True) ? true : false;
+
+    decode_param_bool(vap, "MboEnabled", param);
+    vap_info->u.bss_info.mbo_enabled = (param->type & cJSON_True) ? true : false;
+
     return webconfig_error_none;
 }
 

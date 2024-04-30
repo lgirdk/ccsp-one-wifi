@@ -3704,7 +3704,11 @@ bool is_vap_param_config_changed(wifi_vap_info_t *vap_info_old, wifi_vap_info_t 
                 sizeof(vap_info_old->u.bss_info.preassoc.minimum_advertised_mcs)) ||
             IS_STR_CHANGED(vap_info_old->u.bss_info.preassoc.sixGOpInfoMinRate,
                 vap_info_new->u.bss_info.preassoc.sixGOpInfoMinRate,
-                sizeof(vap_info_old->u.bss_info.preassoc.sixGOpInfoMinRate))) {
+                sizeof(vap_info_old->u.bss_info.preassoc.sixGOpInfoMinRate)) ||
+            IS_CHANGED(vap_info_old->u.bss_info.hostap_mgt_frame_ctrl,
+                vap_info_new->u.bss_info.hostap_mgt_frame_ctrl) ||
+            IS_CHANGED(vap_info_old->u.bss_info.mbo_enabled,
+                vap_info_new->u.bss_info.mbo_enabled)) {
             return true;
         }
     }

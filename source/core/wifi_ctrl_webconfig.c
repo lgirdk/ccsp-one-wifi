@@ -74,10 +74,38 @@ void print_wifi_hal_bss_vap_data(wifi_dbg_type_t log_file_type, char *prefix,
     if (isVapSTAMesh(vap_index)) {
         to_mac_str(l_sta_info->bssid, l_bssid_str);
         to_mac_str(l_sta_info->mac, mac_str);
-        wifi_util_info_print(log_file_type, "%s:%d: [%s] Mesh VAP Config Data: radioindex=%d\n vap_name=%s\n vap_index=%d\n ssid=%s\n bssid:%s\n enabled=%d\n conn_status=%d\n scan_period=%d\n scan_channel=%d\n scan_band =%d\n mac=%s\n exists=%d\r\n",__func__, __LINE__, prefix, l_vap_info->radio_index, l_vap_info->vap_name, l_vap_info->vap_index, l_sta_info->ssid, l_bssid_str, l_sta_info->enabled, l_sta_info->conn_status, l_sta_info->scan_params.period, l_sta_info->scan_params.channel.channel, l_sta_info->scan_params.channel.band, mac_str, l_rdk_vap_info->exists);
+        wifi_util_info_print(log_file_type,
+            "%s:%d: [%s] Mesh VAP Config Data:\n radioindex=%d\n vap_name=%s\n vap_index=%d\n "
+            "ssid=%s\n bssid=%s\n enabled=%d\n conn_status=%d\n scan_period=%d\n scan_channel=%d\n "
+            "scan_band=%d\n mac=%s\n exists=%d\n",
+            __func__, __LINE__, prefix, l_vap_info->radio_index, l_vap_info->vap_name,
+            l_vap_info->vap_index, l_sta_info->ssid, l_bssid_str, l_sta_info->enabled,
+            l_sta_info->conn_status, l_sta_info->scan_params.period,
+            l_sta_info->scan_params.channel.channel, l_sta_info->scan_params.channel.band, mac_str,
+            l_rdk_vap_info->exists);
     } else {
         to_mac_str(l_bss_info->bssid, l_bssid_str);
-        wifi_util_info_print(log_file_type, "%s:%d: [%s] VAP Config Data: radioindex=%d\n vap_name=%s\n vap_index=%d\n ssid=%s\n enabled=%d\n ssid_advertisement_enable=%d\n isolation_enabled=%d\n mgmt_power_control=%d\n bss_max_sta =%d\n bss_transition_activated=%d\n nbr_report_activated=%d\n rapid_connect_enabled=%d\n rapid_connect_threshold=%d\n vap_stats_enable=%d\n mac_filter_enabled =%d\n mac_filter_mode=%d\n wmm_enabled=%d\n uapsd_enabled =%d\n beacon_rate=%d\n bridge_name=%s\n mac=%s\n wmm_noack = %d\n wep_key_length = %d\n bss_hotspot = %d\n wps_push_button = %d\n beacon_rate_ctl =%s\n network_initiated_greylist=%d\n mcast2ucast=%d\n exists=%d\r\n",__func__, __LINE__, prefix, l_vap_info->radio_index, l_vap_info->vap_name, l_vap_info->vap_index, l_bss_info->ssid, l_bss_info->enabled, l_bss_info->showSsid, l_bss_info->isolation, l_bss_info->mgmtPowerControl, l_bss_info->bssMaxSta, l_bss_info->bssTransitionActivated, l_bss_info->nbrReportActivated, l_bss_info->rapidReconnectEnable, l_bss_info->rapidReconnThreshold, l_bss_info->vapStatsEnable, l_bss_info->mac_filter_enable, l_bss_info->mac_filter_mode, l_bss_info->wmm_enabled, l_bss_info->UAPSDEnabled, l_bss_info->beaconRate, l_vap_info->bridge_name, l_bssid_str, l_bss_info->wmmNoAck, l_bss_info->wepKeyLength, l_bss_info->bssHotspot, l_bss_info->wpsPushButton, l_bss_info->beaconRateCtl, l_bss_info->network_initiated_greylist, l_bss_info->mcast2ucast, l_rdk_vap_info->exists);
+        wifi_util_info_print(log_file_type,
+            "%s:%d: [%s] VAP Config Data:\n radioindex=%d\n vap_name=%s\n vap_index=%d\n ssid=%s\n "
+            "enabled=%d\n ssid_advertisement_enable=%d\n isolation_enabled=%d\n "
+            "mgmt_power_control=%d\n bss_max_sta=%d\n bss_transition_activated=%d\n "
+            "nbr_report_activated=%d\n rapid_connect_enabled=%d\n rapid_connect_threshold=%d\n "
+            "vap_stats_enable=%d\n mac_filter_enabled=%d\n mac_filter_mode=%d\n wmm_enabled=%d\n "
+            "uapsd_enabled=%d\n beacon_rate=%d\n bridge_name=%s\n mac=%s\n wmm_noack=%d\n "
+            "wep_key_length=%d\n bss_hotspot=%d\n wps_push_button=%d\n beacon_rate_ctl=%s\n "
+            "network_initiated_greylist=%d\n mcast2ucast=%d\n exists=%d\n "
+            "hostap_mgt_frame_ctrl=%d\n mbo_enabled=%d\n",
+            __func__, __LINE__, prefix, l_vap_info->radio_index, l_vap_info->vap_name,
+            l_vap_info->vap_index, l_bss_info->ssid, l_bss_info->enabled, l_bss_info->showSsid,
+            l_bss_info->isolation, l_bss_info->mgmtPowerControl, l_bss_info->bssMaxSta,
+            l_bss_info->bssTransitionActivated, l_bss_info->nbrReportActivated,
+            l_bss_info->rapidReconnectEnable, l_bss_info->rapidReconnThreshold,
+            l_bss_info->vapStatsEnable, l_bss_info->mac_filter_enable, l_bss_info->mac_filter_mode,
+            l_bss_info->wmm_enabled, l_bss_info->UAPSDEnabled, l_bss_info->beaconRate,
+            l_vap_info->bridge_name, l_bssid_str, l_bss_info->wmmNoAck, l_bss_info->wepKeyLength,
+            l_bss_info->bssHotspot, l_bss_info->wpsPushButton, l_bss_info->beaconRateCtl,
+            l_bss_info->network_initiated_greylist, l_bss_info->mcast2ucast, l_rdk_vap_info->exists,
+            l_bss_info->hostap_mgt_frame_ctrl, l_bss_info->mbo_enabled);
     }
 }
 
@@ -3386,6 +3414,11 @@ pErr wifi_vap_cfg_subdoc_handler(void *data)
         }
 
         cJSON_AddStringToObject(vb_entry, "RepurposedVapName", wifi_vap_map->vap_array[vapArrayIndex].repurposed_vap_name);
+
+        cJSON_AddBoolToObject(vb_entry, "HostapMgtFrameCtrl", wifi_vap_map->vap_array[vapArrayIndex].u.bss_info.hostap_mgt_frame_ctrl);
+
+        cJSON_AddBoolToObject(vb_entry, "MboEnabled",
+            wifi_vap_map->vap_array[vapArrayIndex].u.bss_info.mbo_enabled);
 
         cJSON *vapConnectionControl_o = cJSON_GetObjectItem(vb_entry, "VapConnectionControl");
         if (vapConnectionControl_o == NULL) {
