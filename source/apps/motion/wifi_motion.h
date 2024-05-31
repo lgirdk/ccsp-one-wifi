@@ -21,6 +21,7 @@
 #define WIFI_MOTION_H
 
 #include "wifi_csi.h"
+#include "bus.h"
 
 #ifdef __cplusplus
 extern "C" {

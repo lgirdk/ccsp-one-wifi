@@ -19,6 +19,9 @@
 
 #ifndef _COLLECTION_H_
 #define	_COLLECTION_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -66,4 +69,7 @@ void     *hash_map_get_first    (hash_map_t *map);
 void     *hash_map_get_next    (hash_map_t *map, void *data);
 hash_map_t *hash_map_clone (hash_map_t *src_map, size_t data_size);
 
+#ifdef __cplusplus
+}
+#endif
 #endif // _COLLECTION_H_

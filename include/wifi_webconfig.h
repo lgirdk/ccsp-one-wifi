@@ -84,6 +84,8 @@ typedef enum {
     webconfig_error_translate_to_tr181,
     webconfig_error_translate_from_tr181,
     webconfig_error_translate_from_ovsdb_cfg_no_change,
+    webconfig_error_translate_to_easymesh,
+    webconfig_error_translate_from_easymesh,
     webconfig_error_max
 } webconfig_error_t;
 
@@ -216,10 +218,12 @@ typedef struct {
 #define     webconfig_data_descriptor_encoded                 1 << 0
 #define     webconfig_data_descriptor_translate_to_tr181      1 << 1
 #define     webconfig_data_descriptor_translate_to_ovsdb      1 << 2
+#define     webconfig_data_descriptor_translate_to_easymesh   1 << 3
 
 #define     webconfig_data_descriptor_decoded                 1 << 16
 #define     webconfig_data_descriptor_translate_from_tr181    1 << 17
 #define     webconfig_data_descriptor_translate_from_ovsdb    1 << 18
+#define     webconfig_data_descriptor_translate_from_easymesh 1 << 19
     unsigned int   descriptor;//TBD Onewifi
     struct {
         webconfig_subdoc_decoded_data_t decoded;

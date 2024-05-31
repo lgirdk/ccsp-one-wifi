@@ -31,7 +31,6 @@
 #include <string.h>
 #include <sys/prctl.h>
 #include "wifi_base.h"
-#include "bus.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -2759,6 +2759,30 @@ webconfig_error_t decode_config_object(const cJSON *wifi, wifi_global_config_t *
     return webconfig_error_none;
 }
 
+webconfig_error_t decode_device_info(const cJSON *device_cfg, wifi_platform_property_t *info)
+{
+    const cJSON  *param;
+
+    decode_param_string(device_cfg, "Manufacturer", param);
+    strcpy(info->manufacturer, param->valuestring);
+
+    decode_param_string(device_cfg, "Model", param);
+    strcpy(info->manufacturerModel, param->valuestring);
+
+    decode_param_string(device_cfg, "SerialNo", param);
+    strcpy(info->serialNo, param->valuestring);
+
+    decode_param_string(device_cfg, "Software_version", param);
+    strcpy(info->software_version, param->valuestring);
+
+    decode_param_string(device_cfg, "CMMAC", param);
+    str_to_mac_bytes(param->valuestring,info->cm_mac);
+
+    decode_param_string(device_cfg, "AL1905-MAC", param);
+    str_to_mac_bytes(param->valuestring,info->al_1905_mac);
+
+    return webconfig_error_none;
+}
 
 webconfig_error_t decode_associated_clients_object(webconfig_subdoc_data_t *data, cJSON *obj_vaps, assoclist_type_t assoclist_type)
 {
