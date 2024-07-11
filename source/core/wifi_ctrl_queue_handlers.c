@@ -2517,18 +2517,24 @@ void process_channel_change_event(wifi_channel_change_event_t *ch_chg)
         wifi_channelState_t chan_state = CHAN_STATE_DFS_NOP_FINISHED;
         rdk_wifi_radio_t *l_radio = NULL;
         time_t time_now = 0;
+        l_radio = find_radio_config_by_index(ch_chg->radioIndex);
+        time_now = time(NULL);
+
+        if (l_radio == NULL) {
+            wifi_util_error_print(WIFI_CTRL,"%s:%d radio strucutre is not present for radio %d\n",
+                                __FUNCTION__, __LINE__,  ch_chg->radioIndex);
+            return;
+        }
+
+        if( ((ch_chg->channel >= 36 && ch_chg->channel < 52) && (ch_chg->channelWidth != WIFI_CHANNELBANDWIDTH_160MHZ )) || (ch_chg->channel > 144 && ch_chg->channel <= 165) ) {
+            wifi_util_error_print(WIFI_CTRL,"%s: Wrong radar in radio_index:%d chan:%u \n",__FUNCTION__, ch_chg->radioIndex, ch_chg->channel);
+            return ;
+        }
 
         switch (ch_chg->sub_event)
         {
             case WIFI_EVENT_RADAR_DETECTED :
                 chan_state = CHAN_STATE_DFS_NOP_START;
-                l_radio = find_radio_config_by_index(ch_chg->radioIndex);
-                time_now = time(NULL);
-                if (l_radio == NULL) {
-                    wifi_util_error_print(WIFI_CTRL,"%s:%d radio strucutre is not present for radio %d\n",
-                                          __FUNCTION__, __LINE__,  ch_chg->radioIndex);
-                    return;
-                }
                 if((l_radio->radarInfo.timestamp != 0) && ((time_now - l_radio->radarInfo.timestamp) <= 2)) {
                     /* Ignore the duplicate radar events for the same channel triggered within 2 seconds */
                     break;
@@ -2544,6 +2550,13 @@ void process_channel_change_event(wifi_channel_change_event_t *ch_chg)
                 chan_state = CHAN_STATE_DFS_CAC_COMPLETED;
                 break;
             case WIFI_EVENT_RADAR_NOP_FINISHED :
+                if( (unsigned int)l_radio->radarInfo.last_channel == ch_chg->channel && (time_now - l_radio->radarInfo.timestamp >= 1800) && (l_radio->radarInfo.num_detected > 0)) {
+                    l_radio->radarInfo.last_channel = 0;
+                    l_radio->radarInfo.num_detected = 0;
+                    l_radio->radarInfo.timestamp = 0;
+                } else if (l_radio->radarInfo.num_detected > 1){
+                    l_radio->radarInfo.num_detected--;
+                }
                 chan_state = CHAN_STATE_DFS_NOP_FINISHED;
                 break;
             case WIFI_EVENT_RADAR_PRE_CAC_EXPIRED :
