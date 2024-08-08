@@ -24,8 +24,9 @@
 extern "C" {
 #endif /* __cplusplus */
 
-int platform_init(void);
+#include "bus.h"
 
+int platform_init(bus_handle_t *handle);
 
 #ifdef __cplusplus
 }

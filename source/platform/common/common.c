@@ -20,10 +20,10 @@
 #include "platform_common.h"
 #include "bus.h"
 
-int platform_init(void)
+int platform_init(bus_handle_t *handle)
 {
     /* Initialize RBUS descriptor */
-    bus_init();
+    bus_init(handle);
 
     /* t2_events_, v_secure_system etc init */
     // system_init();

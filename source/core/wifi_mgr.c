@@ -1579,8 +1579,8 @@ int init_wifimgr()
     char db_file[128];
     int hal_initialized = RETURN_ERR;
 
-    platform_init();
-    wifi_util_info_print(WIFI_CTRL, "%s:%d: wifi_bus_init success\n", __FUNCTION__, __LINE__);
+    platform_init(&g_wifi_mgr.ctrl.handle);
+    wifi_util_info_print(WIFI_CTRL, "%s:%d: wifi platform init success\n", __func__, __LINE__);
 
     if(wifi_hal_pre_init() != RETURN_OK) {
         wifi_util_error_print(WIFI_MGR,"%s wifi hal pre_init failed\n", __func__);

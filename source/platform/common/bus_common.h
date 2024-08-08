@@ -242,7 +242,7 @@ typedef bus_error_t (*bus_event_sub_handler_t)(char *event_name, raw_data_t *p_d
 typedef bus_error_t (*bus_event_sub_ex_async_handler_t)(char *event_name, bus_error_t ret);
 
 /* Following are bus function pointers */
-typedef bus_error_t (* wifi_bus_init_t)                         (void);
+typedef bus_error_t (* wifi_bus_init_t)                         (bus_handle_t *handle);
 typedef bus_error_t (* wifi_bus_open_t)                         (bus_handle_t *handle, char *component_name);
 typedef bus_error_t (* wifi_bus_close_t)                        (bus_handle_t *handle);
 typedef bus_error_t (* wifi_bus_data_get_t)                     (bus_handle_t *handle, char const *name, raw_data_t *data);

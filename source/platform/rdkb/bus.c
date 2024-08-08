@@ -951,8 +951,9 @@ static void bus_sub_cb_registration(char *event_name, rbus_sub_callback_table_t 
     }
 }
 
-bus_error_t bus_init(void)
+bus_error_t bus_init(bus_handle_t *handle)
 {
+    (void)handle;
     bus_error_t rc = bus_error_success;
 
     wifi_bus_desc_t *p_bus_desc = NULL;
