@@ -27,7 +27,7 @@ extern "C" {
 
 #include <stdbool.h>
 #include <wifi_base.h>
-#include <cJSON.h>
+#include <cjson/cJSON.h>
 
 #define WIFI_WEBCONFIG_DOC_DATA_NORTH   "Device.WiFi.WebConfig.Data.Subdoc.North"
 #define WIFI_WEBCONFIG_DOC_DATA_SOUTH   "Device.WiFi.WebConfig.Data.Subdoc.South"
@@ -275,15 +275,41 @@ typedef struct webconfig_subdoc {
     webconfig_encode_subdoc_t   encode_subdoc;
 } webconfig_subdoc_t;
 
+typedef int (* multi_doc_obj_register_t)();
+typedef int (* single_doc_obj_register_t)();
+
+typedef struct {
+    void  *multi_doc;
+    multi_doc_obj_register_t register_func;
+} webconfig_multi_doc_t;
+
+
+typedef struct {
+    void  *doc;
+    single_doc_obj_register_t register_func;
+} webconfig_single_doc_t;
+
 typedef struct webconfig {
     webconfig_initializer_t initializer;
     webconfig_apply_data_t  apply_data;
     webconfig_subdoc_t      subdocs[webconfig_subdoc_type_max];
     webconfig_proto_desc_t  proto_desc;
+    webconfig_multi_doc_t   multi_doc_desc;
+    webconfig_single_doc_t  single_doc_desc;
 } webconfig_t;
 
 // common api for all processes linking with this library
 webconfig_error_t webconfig_init(webconfig_t *config);
+
+webconfig_error_t webconfig_multi_doc_init();
+webconfig_error_t webconfig_single_doc_init();
+
+
+// API related to  multi subdoc of webconfig
+size_t webconf_timeout_handler(size_t numOfEntries);
+void webconf_free_resources(void *arg);
+int wifi_vap_cfg_rollback_handler();
+
 
 // external api sets for onewifi
 webconfig_error_t webconfig_encode(webconfig_t *config, webconfig_subdoc_data_t *data, webconfig_subdoc_type_t type);

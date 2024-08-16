@@ -29,7 +29,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include "cJSON.h"
+#include <cjson/cJSON.h>
 #include "wifi_webconfig.h"
 #include "ctype.h"
 #include "wifi_ctrl.h"

@@ -22,9 +22,7 @@
 #include <stdarg.h>
 #include <pthread.h>
 #include <unistd.h>
-#include "secure_wrapper.h"
 #include "collection.h"
-#include "msgpack.h"
 #include "wifi_webconfig.h"
 #include "wifi_monitor.h"
 #include "wifi_util.h"

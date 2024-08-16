@@ -35,6 +35,7 @@
 #include "wifi_mgr.h"
 #include "wifi_stubs.h"
 #include "wifi_ctrl.h"
+
 #if DML_SUPPORT
 #include "ssp_main.h"
 #else
@@ -166,7 +167,6 @@ static void daemonize(void) {
         wifi_util_error_print(WIFI_MGR,"Error demonizing (setsid)! %d - %s\n", errno, strerror(errno));
         exit(0);
     }
-
     fd = open("/dev/null", O_RDONLY);
     if (fd != 0) {
         dup2(fd, 0);
@@ -197,6 +197,11 @@ wifi_ctrl_t *get_wifictrl_obj(void)
 wifi_mgr_t *get_wifimgr_obj(void)
 {
     return &g_wifi_mgr;
+}
+
+webconfig_t *get_webconfig_obj(void)
+{
+    return &g_wifi_mgr.ctrl.webconfig;
 }
 
 bool is_db_consolidated()
@@ -1566,9 +1571,9 @@ int get_all_param_from_psm_and_set_into_db(void)
 
 int init_wifimgr()
 {
-    if (!drop_root()) {
+    if (!get_stubs_descriptor()->drop_root_fn()) {
         wifi_util_error_print(WIFI_MGR,"%s: drop_root function failed!\n", __func__);
-        gain_root_privilege();
+        get_stubs_descriptor()->gain_root_privilege_fn();
     }
     struct stat sb;
     char db_file[128];
@@ -1712,7 +1717,9 @@ int main(int argc, char *argv[])
     }
 
     if (run_daemon) {
+#ifdef DML_SUPPORT
         daemonize();
+#endif
     }
 
     if (init_wifimgr() != 0) {

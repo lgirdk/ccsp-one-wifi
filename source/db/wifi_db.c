@@ -1,6 +1,8 @@
 #include <stdbool.h>
 #include "wifi_hal.h"
 #include "wifi_db.h"
+#include "wifi_util.h"
+#include "wifi_mgr.h"
 
 #ifdef ONEWIFI_DB_SUPPORT
 extern void init_wifidb(void);
@@ -26,6 +28,10 @@ extern int update_wifi_interworking_config(char *vap_name, wifi_interworking_t *
 extern int update_wifi_global_config(wifi_global_param_t *config);
 extern int wifidb_update_wifi_passpoint_config(char *vap_name, wifi_interworking_t *config);
 extern int wifidb_update_wifi_anqp_config(char *vap_name, wifi_interworking_t *config);
+extern int update_wifi_gas_config(UINT advertisement_id, wifi_GASConfiguration_t *gas_info);
+extern int wifidb_update_wifi_cac_config(wifi_vap_info_map_t *config);
+extern int wifidb_update_wifi_radio_config(int radio_index, wifi_radio_operationParam_t *config, wifi_radio_feature_param_t *feat_config);
+extern int get_wifi_global_param(wifi_global_param_t *config);
 #else
 void init_wifidb(void)
 {
@@ -542,7 +548,7 @@ void init_wifidb_data(void)
 
         init_vap_config_default(vap_index, vapInfo, rdkVapInfo);
         init_interworking_config_default(vap_index, &vapInfo->u.bss_info.interworking.interworking);
-	init_gas_config_default(&g_wifidb->global_config.gas_config);
+        init_gas_config_default(&g_wifidb->global_config.gas_config);
 
     }
 
@@ -593,11 +599,12 @@ int start_wifidb_monitor()
 {
     return 0;
 }
-
+#ifdef DML_SUPPORT
 int wifidb_update_rfc_config(UINT rfc_id, wifi_rfc_dml_parameters_t *rfc_param)
 {
     return 0;
 }
+#endif
 
 int wifidb_init_global_config_default(wifi_global_param_t *config)
 {
@@ -630,15 +637,12 @@ int wifidb_update_gas_config(UINT advertisement_id, wifi_GASConfiguration_t *gas
     return 0;
 }
 
-    return;
-}
- 
 int update_wifi_vap_info(char *vap_name,wifi_vap_info_t *config,rdk_wifi_vap_info_t *rdk_config)
 {
     return 0;
 }
 
-int update_wifi_interworking_config(char *vap_name, wifi_InterworkingElement_t *config)
+int update_wifi_interworking_config(char *vap_name, wifi_interworking_t *config)
 {
     return 0;
 }
@@ -657,9 +661,26 @@ int wifidb_update_wifi_anqp_config(char *vap_name, wifi_interworking_t *config)
 {
     return 0;
 }
+int update_wifi_gas_config(UINT advertisement_id, wifi_GASConfiguration_t *gas_info)
 {
-#endif
+    return 0;
+}
 
+int wifidb_update_wifi_cac_config(wifi_vap_info_map_t *config)
+{
+    return 0;
+}
+
+int wifidb_update_wifi_radio_config(int radio_index, wifi_radio_operationParam_t *config, wifi_radio_feature_param_t *feat_config)
+{
+    return 0;
+}
+
+int get_wifi_global_param(wifi_global_param_t *config)
+{
+   return 0;
+}
+#endif
 void wifidb_init(wifi_db_t *db)
 {
     db->desc.init_fn = init_wifidb;
@@ -674,7 +695,9 @@ void wifidb_init(wifi_db_t *db)
     db->desc.init_tables_fn = init_wifidb_tables;
     db->desc.init_default_value_fn = wifidb_init_default_value;
     db->desc.start_monitor_fn = start_wifidb_monitor;
+#ifdef DML_SUPPORT
     db->desc.update_rfc_config_fn = wifidb_update_rfc_config;
+#endif
     db->desc.init_global_config_default_fn = wifidb_init_global_config_default;
     db->desc.init_radio_config_default_fn = wifidb_init_radio_config_default;
     db->desc.init_vap_config_default_fn = wifidb_init_vap_config_default;
@@ -685,4 +708,9 @@ void wifidb_init(wifi_db_t *db)
     db->desc.update_wifi_global_cfg_fn = update_wifi_global_config;
     db->desc.update_wifi_passpoint_cfg_fn = wifidb_update_wifi_passpoint_config;
     db->desc.update_wifi_anqp_cfg_fn = wifidb_update_wifi_anqp_config;
+    db->desc.update_wifi_gas_cfg_fn = update_wifi_gas_config;
+    db->desc.update_wifi_cac_cfg_fn = wifidb_update_wifi_cac_config;
+    db->desc.update_wifi_radio_cfg_fn = wifidb_update_wifi_radio_config;
+    db->desc.get_wifi_global_param_fn = get_wifi_global_param;
+
 }

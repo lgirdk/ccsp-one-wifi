@@ -26,7 +26,7 @@
 #include <pthread.h>
 #include <msgpack.h>
 #include <errno.h>
-#include <cJSON.h>
+#include <cjson/cJSON.h>
 #include "const.h"
 #include "dml_onewifi_api.h"
 #include "wifi_util.h"
@@ -1162,7 +1162,6 @@ int push_blaster_config_dml_to_ctrl_queue()
     char traceState[512] = { 0 };
     ret = get_bus_descriptor()->bus_get_trace_context_fn(&handle, traceParent, sizeof(traceParent),
         traceState, sizeof(traceState));
-
     if(ret == bus_error_success) {
         wifi_util_dbg_print(WIFI_DMCLI, "%s:%d: After getting the trace context traceparent:%s, tracestate:%s\n", __func__, __LINE__,traceParent,traceState);
         char *telemetry_buf = NULL;

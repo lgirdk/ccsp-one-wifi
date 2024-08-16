@@ -31,12 +31,11 @@ extern "C" {
 #if DML_SUPPORT
 #endif // DML_SUPPORT
 #include "vap_svc.h"
-#include "cJSON.h"
+#include <cjson/cJSON.h>
 #include "collection.h"
 #include "wifi_util.h"
 #include "wifi_webconfig.h"
 #include "wifi_apps_mgr.h"
-
 
 #define WIFI_WEBCONFIG_PRIVATESSID         1
 #define WIFI_WEBCONFIG_HOMESSID            2

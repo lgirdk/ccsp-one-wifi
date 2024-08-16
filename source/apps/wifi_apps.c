@@ -173,6 +173,7 @@ int blaster_event(wifi_app_t *app, wifi_event_t *event)
 
 
 wifi_app_descriptor_t app_desc[] = {
+#ifdef DML_SUPPORT
     {
         wifi_app_inst_analytics, 0,
         wifi_event_type_exec | wifi_event_type_webconfig | wifi_event_type_hal_ind | wifi_event_type_command | wifi_event_type_monitor | wifi_event_type_net | wifi_event_type_wifiapi,
@@ -181,6 +182,7 @@ wifi_app_descriptor_t app_desc[] = {
         analytics_init, analytics_event, analytics_deinit,
         NULL,NULL
     },
+#endif
 #ifdef ONEWIFI_CAC_APP_SUPPORT
     {
         wifi_app_inst_cac, 0,

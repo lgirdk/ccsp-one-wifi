@@ -22,9 +22,7 @@
 #include <stdarg.h>
 #include <pthread.h>
 #include <unistd.h>
-#include "secure_wrapper.h"
 #include "collection.h"
-#include "msgpack.h"
 #include "wifi_webconfig.h"
 #if DML_SUPPORT
 #include "wifi_monitor.h"
@@ -447,7 +445,8 @@ webconfig_error_t webconfig_init(webconfig_t *config)
     config->subdocs[webconfig_subdoc_type_mac_filter].decode_subdoc = decode_mac_filter_subdoc;
     config->subdocs[webconfig_subdoc_type_mac_filter].translate_to_subdoc =  translate_to_mac_filter_subdoc;
     config->subdocs[webconfig_subdoc_type_mac_filter].translate_from_subdoc = translate_from_mac_filter_subdoc;
-    
+ 
+#ifdef ONEWIFI_BLASTER_APP_SUPPORT
     config->subdocs[webconfig_subdoc_type_blaster].type = webconfig_subdoc_type_blaster;
     strcpy(config->subdocs[webconfig_subdoc_type_blaster].name, "blaster config");
     config->subdocs[webconfig_subdoc_type_blaster].major = 1;
@@ -458,7 +457,9 @@ webconfig_error_t webconfig_init(webconfig_t *config)
     config->subdocs[webconfig_subdoc_type_blaster].decode_subdoc = decode_blaster_subdoc;
     config->subdocs[webconfig_subdoc_type_blaster].translate_to_subdoc = translate_to_blaster_subdoc;
     config->subdocs[webconfig_subdoc_type_blaster].translate_from_subdoc = translate_from_blaster_subdoc;
+#endif
 
+#ifdef ONEWIFI_HARVESTER_APP_SUPPORT
     config->subdocs[webconfig_subdoc_type_harvester].type = webconfig_subdoc_type_harvester;
     strcpy(config->subdocs[webconfig_subdoc_type_harvester].name, "instant measurement config");
     config->subdocs[webconfig_subdoc_type_harvester].major = 1;
@@ -469,7 +470,9 @@ webconfig_error_t webconfig_init(webconfig_t *config)
     config->subdocs[webconfig_subdoc_type_harvester].decode_subdoc = decode_harvester_subdoc;
     config->subdocs[webconfig_subdoc_type_harvester].translate_to_subdoc = translate_to_harvester_subdoc;
     config->subdocs[webconfig_subdoc_type_harvester].translate_from_subdoc = translate_from_harvester_subdoc;
+#endif
 
+#ifdef ONEWIFI_CSI_APP_SUPPORT
     config->subdocs[webconfig_subdoc_type_csi].type = webconfig_subdoc_type_csi;
     strcpy(config->subdocs[webconfig_subdoc_type_csi].name, "csi data");
     config->subdocs[webconfig_subdoc_type_csi].major = 1;
@@ -479,6 +482,7 @@ webconfig_error_t webconfig_init(webconfig_t *config)
     config->subdocs[webconfig_subdoc_type_csi].decode_subdoc = decode_csi_subdoc;
     config->subdocs[webconfig_subdoc_type_csi].translate_to_subdoc =  translate_to_csi_subdoc;
     config->subdocs[webconfig_subdoc_type_csi].translate_from_subdoc = translate_from_csi_subdoc;
+#endif
 
     config->subdocs[webconfig_subdoc_type_wifi_config].type = webconfig_subdoc_type_wifi_config;
     strcpy(config->subdocs[webconfig_subdoc_type_wifi_config].name, "Wifi global");
@@ -536,6 +540,7 @@ webconfig_error_t webconfig_init(webconfig_t *config)
     config->subdocs[webconfig_subdoc_type_vif_neighbors].translate_to_subdoc = translate_to_vif_neighbors_subdoc;
     config->subdocs[webconfig_subdoc_type_vif_neighbors].translate_from_subdoc = translate_from_vif_neighbors_subdoc;
 
+#ifdef ONEWIFI_LEVL_APP_SUPPORT
     config->subdocs[webconfig_subdoc_type_levl].type = webconfig_subdoc_type_levl;
     strcpy(config->subdocs[webconfig_subdoc_type_levl].name, "levl data");
     config->subdocs[webconfig_subdoc_type_levl].major = 1;
@@ -547,7 +552,9 @@ webconfig_error_t webconfig_init(webconfig_t *config)
     config->subdocs[webconfig_subdoc_type_levl].decode_subdoc = decode_levl_subdoc;
     config->subdocs[webconfig_subdoc_type_levl].translate_to_subdoc = translate_to_levl_subdoc;
     config->subdocs[webconfig_subdoc_type_levl].translate_from_subdoc = translate_from_levl_subdoc;
+#endif //ONEWIFI_LEVL_APP_SUPPORT
 
+#ifdef ONEWIFI_CAC_APP_SUPPORT
     config->subdocs[webconfig_subdoc_type_cac].type = webconfig_subdoc_type_cac;
     strcpy(config->subdocs[webconfig_subdoc_type_cac].name, "connection_control");
     config->subdocs[webconfig_subdoc_type_cac].major = 1;
@@ -559,7 +566,9 @@ webconfig_error_t webconfig_init(webconfig_t *config)
     config->subdocs[webconfig_subdoc_type_cac].decode_subdoc = decode_cac_config_subdoc;
     config->subdocs[webconfig_subdoc_type_cac].translate_to_subdoc = translate_to_cac_config_subdoc;
     config->subdocs[webconfig_subdoc_type_cac].translate_from_subdoc = translate_from_cac_config_subdoc;
+#endif
 
+#ifdef DML_SUPPORT
     config->subdocs[webconfig_subdoc_type_radio_stats].type = webconfig_subdoc_type_radio_stats;
     strcpy(config->subdocs[webconfig_subdoc_type_radio_stats].name, "Radio_Channel_Stats");
     config->subdocs[webconfig_subdoc_type_radio_stats].major = 1;
@@ -619,7 +628,7 @@ webconfig_error_t webconfig_init(webconfig_t *config)
     config->subdocs[webconfig_subdoc_type_radio_temperature].decode_subdoc = decode_radio_temperature_stats_subdoc;
     config->subdocs[webconfig_subdoc_type_radio_temperature].translate_to_subdoc = translate_to_radio_temperature_stats_subdoc;
     config->subdocs[webconfig_subdoc_type_radio_temperature].translate_from_subdoc = translate_from_radio_temperature_stats_subdoc;
-
+#endif
     config->proto_desc.translate_to = translate_to_proto;
     config->proto_desc.translate_from = translate_from_proto;
 

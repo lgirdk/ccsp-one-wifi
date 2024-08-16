@@ -24,9 +24,10 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <inttypes.h>
-
+#ifdef DML_SUPPORT
 #include "ansc_platform.h"
 #include "ccsp_WifiLog_wrapper.h"
+#endif
 #include "wifi_events.h"
 #include "wifi_mgr.h"
 #include "wifi_util.h"
@@ -523,12 +524,13 @@ int push_event_to_monitor_queue(wifi_monitor_data_t *mon_data, wifi_event_subtyp
     wifi_monitor_t *monitor_param = (wifi_monitor_t *)get_wifi_monitor();
     wifi_event_t *event;
 
+#if DML_SUPPORT
     /* Check if monitor queue is initialized */
     if (monitor_initialization_done == false) {
         wifi_util_error_print(WIFI_CTRL,"%s %d: Monitor queue is not ready yet. subtype: %d\n", __FUNCTION__, __LINE__, sub_type);
         return RETURN_ERR;
     }
-
+#endif
     if(mon_data == NULL) {
         wifi_util_error_print(WIFI_CTRL,"%s %d: input monitor data is null\n",__FUNCTION__, __LINE__);
         return RETURN_ERR;

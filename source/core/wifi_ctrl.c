@@ -388,11 +388,12 @@ int init_wifi_global_config(void)
         wifi_util_info_print(WIFI_CTRL, "%s:%d wifi global params already initialized\r\n",__func__, __LINE__);
         return RETURN_OK;
     }
-
+#if DML_SUPPORT
     if (RETURN_OK != WiFi_InitGasConfig()) {
         wifi_util_error_print(WIFI_CTRL,"RDK_LOG_WARN, RDKB_SYSTEM_BOOT_UP_LOG : CosaWifiInitialize - WiFi failed to Initialize GAS Configuration.\n");
         return RETURN_ERR;
     }
+#endif
 
     wifi_global_param_init = true;
     return RETURN_OK;
@@ -422,7 +423,7 @@ int start_radios(rdk_dev_mode_type_t mode)
     uint8_t num_of_radios = getNumberRadios();
     wifi_ctrl_t *ctrl = (wifi_ctrl_t *)get_wifictrl_obj();
 
-    wifi_util_info_print(WIFI_CTRL,"%s(): Start radios\n", __FUNCTION__);
+    wifi_util_info_print(WIFI_CTRL,"%s(): Start radios %d\n", __FUNCTION__, num_of_radios);
     //Check for the number of radios
     if (num_of_radios > MAX_NUM_RADIOS) {
         wifi_util_error_print(WIFI_CTRL,"WIFI %s : Number of Radios %d exceeds supported %d Radios \n",__FUNCTION__, getNumberRadios(), MAX_NUM_RADIOS);
@@ -528,6 +529,7 @@ bool is_acs_channel_updated(unsigned int num_radios)
     return true;
 }
 
+#if DML_SUPPORT
 bool check_for_greylisted_mac_filter(void)
 {
     acl_entry_t *acl_entry = NULL;
@@ -562,6 +564,7 @@ bool check_for_greylisted_mac_filter(void)
     }
     return false;
 }
+#endif // DML_SUPPORT
 
 void bus_get_vap_init_parameter(const char *name, unsigned int *ret_val)
 {
@@ -576,13 +579,24 @@ void bus_get_vap_init_parameter(const char *name, unsigned int *ret_val)
     memset(&data, 0, sizeof(raw_data_t));
     ctrl = (wifi_ctrl_t *)get_wifictrl_obj();
 
-    get_wifi_global_param(&global_param);
+    get_wifidb_obj()->desc.get_wifi_global_param_fn(&global_param);
     // set all default return values first
     if (strcmp(name, WIFI_DEVICE_MODE) == 0) {
+#ifdef EASY_MESH_NODE
+       wifi_util_info_print(WIFI_CTRL,"%s:%d\n",__func__,__LINE__);
+       *ret_val = (unsigned int)rdk_dev_mode_type_em_node;
+
+#elif EASY_MESH_COLOCATED_NODE
+       wifi_util_info_print(WIFI_CTRL,"%s:%d\n",__func__,__LINE__);
+       *ret_val = (unsigned int)rdk_dev_mode_type_em_colocated_node;
+
+#else
+       wifi_util_info_print(WIFI_CTRL,"%s:%d\n",__func__,__LINE__);
 #ifdef ONEWIFI_DEFAULT_NETWORKING_MODE
         *ret_val = ONEWIFI_DEFAULT_NETWORKING_MODE;
 #else
         *ret_val = (unsigned int)global_param.device_network_mode;
+#endif
 #endif
         ctrl->network_mode = (unsigned int)*ret_val;
 
@@ -769,6 +783,7 @@ int start_wifi_services(void)
         if they are default and last-reboot reason is SW get the previous config from Webconfig */
         validate_and_sync_private_vap_credentials();
 #endif
+
     } else if (ctrl->network_mode == rdk_dev_mode_type_ext) {
         start_radios(rdk_dev_mode_type_ext);
         if (is_sta_enabled()) {
@@ -777,6 +792,13 @@ int start_wifi_services(void)
         } else {
             wifi_util_info_print(WIFI_CTRL, "%s:%d mesh sta disabled\n",__func__, __LINE__);
         }
+    } else if (ctrl->network_mode == rdk_dev_mode_type_em_node) {
+        wifi_util_info_print(WIFI_CTRL, "%s:%d start em_mode\n",__func__, __LINE__);
+        start_radios(rdk_dev_mode_type_gw);
+        start_extender_vaps();
+    } else if (ctrl->network_mode == rdk_dev_mode_type_em_colocated_node) {
+        wifi_util_info_print(WIFI_CTRL, "%s:%d start em_colocated mode\n",__func__, __LINE__);
+        start_radios(rdk_dev_mode_type_gw);
     }
 
     return RETURN_OK;
@@ -806,6 +828,7 @@ bool get_notify_wifi_from_psm(char *PsmParamName)
         }
     }
     wifi_util_dbg_print(WIFI_CTRL, "get_notify_wifi_from_psm ends: %d\n", rc);
+
     return psm_notify_flag;
 }
 
@@ -1948,6 +1971,7 @@ static int sta_connectivity_selfheal(void* arg)
     return TIMER_TASK_COMPLETE;
 }
 
+#if DML_SUPPORT
 static int run_greylist_event(void *arg)
 {
     bool greylist_flag = false;
@@ -1959,7 +1983,7 @@ static int run_greylist_event(void *arg)
     }
     return TIMER_TASK_COMPLETE;
 }
-
+#endif
 static int run_analytics_event(void* arg)
 {
     wifi_ctrl_t *ctrl = NULL;
@@ -2001,13 +2025,12 @@ static void ctrl_queue_timeout_scheduler_tasks(wifi_ctrl_t *ctrl)
 #ifdef ONEWIFI_CAC_APP_SUPPORT
     scheduler_add_timer_task(ctrl->sched, FALSE, NULL, run_cac_event, NULL, (CAC_PERIOD * 1000), 0, FALSE);
 #endif
-
+#ifdef DML_SUPPORT
     scheduler_add_timer_task(ctrl->sched, FALSE, NULL, run_greylist_event, NULL, (GREYLIST_CHECK_IN_SECONDS * 1000), 0, FALSE);
-
+#endif
     scheduler_add_timer_task(ctrl->sched, FALSE, NULL, sta_connectivity_selfheal, NULL, (STA_CONN_RETRY_TIMEOUT * 1000), 0, FALSE);
 
     scheduler_add_timer_task(ctrl->sched, FALSE, NULL, bus_check_and_subscribe_events, NULL, (ctrl->poll_period * 1000), 0, FALSE);
-
     scheduler_add_timer_task(ctrl->sched, FALSE, NULL, pending_states_webconfig_analyzer, NULL, (ctrl->poll_period * 1000), 0, FALSE);
 
 #if defined (FEATURE_SUPPORT_ACL_SELFHEAL)
@@ -3151,7 +3174,6 @@ int set_bus_bool_param(bus_handle_t *handle, const char *paramNames, bool data_v
     }
     wifi_util_dbg_print(WIFI_MGR, "[%s:%d] bus: wifi bus set[%s]:value:%d\r\n", __func__, __LINE__,
         paramNames, data_value);
-
     return RETURN_OK;
 }
 

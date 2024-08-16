@@ -39,7 +39,7 @@
 #include <arpa/inet.h>
 #include "platform-logger.h"
 #include "wifi_hal.h"
-#include "cJSON.h"
+#include <cjson/cJSON.h>
 #include "wifi_passpoint.h"
 #include "ctype.h"
 #include "webconfig_framework.h"

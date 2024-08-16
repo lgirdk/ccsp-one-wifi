@@ -33,7 +33,7 @@
 #if DML_SUPPORT
 #include <sysevent/sysevent.h>
 #endif // DML_SUPPORT
-#include <cJSON.h>
+#include <cjson/cJSON.h>
 #include <dirent.h>
 #include <errno.h>
 #include "wifi_ctrl.h"

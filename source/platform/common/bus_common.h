@@ -62,7 +62,8 @@ extern "C" {
         } \
     } while (0)
 
-#define BUS_MAX_NAME_LENGTH         80
+#define BUS_SERVER_PROCESS_NAME     "OneWifi"
+#define BUS_MAX_NAME_LENGTH         104
 #define ZERO_TABLE                  0
 #define UNREFERENCED_PARAMETER(_p_) (void)(_p_)
 

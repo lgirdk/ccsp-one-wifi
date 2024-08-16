@@ -134,6 +134,7 @@ int apps_mgr_event(wifi_apps_mgr_t *apps_mgr, wifi_event_t *event)
 
 int apps_mgr_analytics_event(wifi_apps_mgr_t *apps_mgr, wifi_event_type_t type, wifi_event_subtype_t sub_type, void *arg)
 {
+#ifdef DML_SUPPORT
     wifi_app_t  *app = NULL;
     wifi_event_t *event;
 
@@ -154,7 +155,7 @@ int apps_mgr_analytics_event(wifi_apps_mgr_t *apps_mgr, wifi_event_type_t type, 
     event->event_type = wifi_event_type_analytic;
 
     destroy_wifi_event(event);
-
+#endif
     return RETURN_OK;
 }
 

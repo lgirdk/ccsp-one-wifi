@@ -342,13 +342,14 @@ int execute_assoc_client_stats_api(wifi_mon_collector_element_t *c_elem, wifi_mo
                 timespecsub(&tv_now, &(mon_data->bssid_data[vap_array_index].last_sta_update_time),
                     &t_diff);
             }
-
+#ifdef DML_SUPPORT
             // update thresholds if changed
             if (get_vap_dml_parameters(RSSI_THRESHOLD, &rssi) == 0) {
                 mon_data->sta_health_rssi_threshold = rssi;
                 wifi_util_dbg_print(WIFI_MON, "%s:%d RSSI threshold updated to %d\n", __func__,
                     __LINE__, mon_data->sta_health_rssi_threshold);
             }
+#endif
 
             if (sta->dev_stats.cli_SignalStrength >= mon_data->sta_health_rssi_threshold) {
                 sta->good_rssi_time += t_diff.tv_sec;

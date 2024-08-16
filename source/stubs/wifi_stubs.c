@@ -28,6 +28,10 @@
 extern int t2_event_d(char *marker, int value);
 extern int t2_event_s(char *marker, char *buff);
 extern int v_secure_system(const char *command);
+extern bool drop_root();
+extern void gain_root_privilege();
+extern char * getDeviceMac();
+extern int onewifi_pktgen_uninit();
 #else
 static int t2_event_d(char *marker, int value)
 {
@@ -43,12 +47,36 @@ static int v_secure_system(const char *command)
 {
     return system(command);
 }
+
+static bool drop_root()
+{
+   return true;
+}
+
+static void gain_root_privilege()
+{
+}
+
+static char* getDeviceMac()
+{
+   static char mac[] = "11:22:33:44:55:66";
+   return mac;
+}
+
+static int onewifi_pktgen_uninit()
+{
+   return 0;
+}
 #endif
 
 wifi_stubs_descriptor_t stubs_desc = {
     t2_event_d,
     t2_event_s,
-    v_secure_system
+    v_secure_system,
+    drop_root,
+    gain_root_privilege,
+    getDeviceMac,
+    onewifi_pktgen_uninit
 };
 
 wifi_stubs_descriptor_t *get_stubs_descriptor()

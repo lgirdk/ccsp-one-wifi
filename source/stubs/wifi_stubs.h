@@ -23,11 +23,19 @@
 typedef int (* wifi_t2_event_d_t)(char *marker, int value);
 typedef int (* wifi_t2_event_s_t)(char *marker, char *buff);
 typedef int (* wifi_v_secure_system_t)(const char *command);
+typedef bool (* wifi_drop_root_t)();
+typedef void (* wifi_gain_root_privilege_t)();
+typedef char* (* wifi_getDeviceMac_t)();
+typedef int (* wifi_onewifi_pktgen_uninit_t)();
 
 typedef struct {
     wifi_t2_event_d_t t2_event_d_fn;
     wifi_t2_event_s_t t2_event_s_fn;
     wifi_v_secure_system_t v_secure_system_fn;
+    wifi_drop_root_t drop_root_fn;
+    wifi_gain_root_privilege_t gain_root_privilege_fn;
+    wifi_getDeviceMac_t getDeviceMac_fn;
+    wifi_onewifi_pktgen_uninit_t onewifi_pktgen_uninit_fn;
 } wifi_stubs_descriptor_t;
 
 wifi_stubs_descriptor_t *get_stubs_descriptor();

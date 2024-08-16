@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <cjson/cJSON.h>
 #include <msgpack.h>
-#include <cJSON.h>
 
 #if defined(_MSC_VER)
 #if _MSC_VER >= 1800

@@ -30,7 +30,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <math.h>
-#include "cJSON.h"
+#include <cjson/cJSON.h>
 #include "wifi_webconfig.h"
 #include "ctype.h"
 #include "const.h"

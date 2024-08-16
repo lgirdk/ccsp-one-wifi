@@ -77,7 +77,7 @@ static elem_node_map_t *insert_table_row(elem_node_map_t *table_root, char *node
     elem_node_map_t* current_node = table_root;
     elem_node_map_t* temp_node    = NULL;
     elem_node_map_t* next_node    = NULL;
-    char             buff[128];
+    char             buff[256];
     bus_error_t      status = bus_error_destination_not_found;
 
     VERIFY_NULL_WITH_RETURN_ADDR(table_root);
@@ -207,7 +207,7 @@ elem_node_map_t* bus_insert_elem_node(elem_node_map_t* root, bus_mux_data_elem_t
     elem_node_map_t* temp_node    = NULL;
     elem_node_map_t* next_node    = NULL;
     int  ret = 0, create_child   = 0;
-    char buff[128];
+    char buff[256];
 
     if(current_node == NULL || elem == NULL)
     {

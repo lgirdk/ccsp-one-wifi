@@ -17,9 +17,13 @@
   limitations under the License.
  **************************************************************************/
 
+#if DML_SUPPORT
 #include "wifi_data_plane.h"
 #include "wifi_monitor.h"
 #include "plugin_main_apis.h"
+#include <sysevent/sysevent.h>
+#include "ccsp_base_api.h"
+#endif
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -29,12 +33,10 @@
 #include <sys/sysinfo.h>
 #include <sys/un.h>
 #include <assert.h>
-#include <sysevent/sysevent.h>
-#include <cJSON.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <pthread.h>
-#include "cJSON.h"
+#include <cjson/cJSON.h>
 #include "os.h"
 #include "util.h"
 #include "ovsdb.h"
@@ -55,7 +57,6 @@
 #include "wifi_util.h"
 #include "wifi_mgr.h"
 #include "ssp_loop.h"
-#include "ccsp_base_api.h"
 
 #define MAX_BUF_SIZE 128
 #define ONEWIFI_DB_VERSION_EXISTS_FLAG 100017
@@ -87,10 +88,13 @@ ovsdb_table_t table_Wifi_Anqp_Config;
 ovsdb_table_t table_Wifi_Preassoc_Control_Config;
 ovsdb_table_t table_Wifi_Postassoc_Control_Config;
 ovsdb_table_t table_Wifi_Connection_Control_Config;
+#if DML_SUPPORT
 ovsdb_table_t table_Wifi_Rfc_Config;
 static char *WhixLoginterval = "dmsb.device.deviceinfo.X_RDKCENTRAL-COM_WHIX.LogInterval";
 static char *WhixChUtilityLoginterval = "dmsb.device.deviceinfo.X_RDKCENTRAL-COM_WHIX.ChUtilityLogInterval";
 
+#endif // DML_SUPPORT
+#ifdef ONEWIFI_DB_SUPPORT
 void wifidb_init_gas_config_default(wifi_GASConfiguration_t *config);
 
 /************************************************************************************
@@ -5237,7 +5241,6 @@ int ovsdb_get_vap_info_map(unsigned int real_index, unsigned int radio_index, wi
 }
 #endif//ONE_WIFI
 
-#ifdef ONEWIFI_DB_SUPPORT
 void wifidb_print(char *format, ...)
 {
     char buff[256 * 1024] = {0};

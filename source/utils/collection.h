@@ -25,6 +25,7 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #define HASH_MAP_MAX_KEY_SIZE   100
 
