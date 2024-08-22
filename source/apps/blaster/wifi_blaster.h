@@ -100,12 +100,11 @@ typedef struct {
     char                           status_desc[512];
     bool                           is_running;
     hash_map_t                     *active_msmt_map;
-    int                            num_req_count;
-    int                            num_res_count;
-    bool                           reponse_received;
     queue_t                        *worker_queue;
     pthread_mutex_t                worker_lock;
     pthread_t                      worker_thread_id;
+    pthread_cond_t                 cv;
+    bool                           sample_done;
 } wifi_actvie_msmt_t;
 
 typedef struct {
@@ -147,7 +146,6 @@ void ResetActiveMsmtStepInstances(void);
 unsigned long getCurrentTimeInMicroSeconds();
 int isVapEnabled (int wlanIndex);
 int WaitForDuration (int timeInMs);
-void pktGen_BlastClient (char *dest_mac, wifi_interface_name_t *ifname);
 void WiFiBlastClient(void);
 void process_active_msmt_diagnostics (int ap_index);
 
