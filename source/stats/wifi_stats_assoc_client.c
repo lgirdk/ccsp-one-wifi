@@ -143,53 +143,58 @@ int process_assoc_dev_stats(wifi_mon_stats_args_t *args, hash_map_t *sta_map, vo
     return RETURN_OK;
 }
 
-int execute_assoc_client_stats_api(wifi_mon_collector_element_t *c_elem, wifi_monitor_t *mon_data, unsigned long task_interval_ms)
+int execute_assoc_client_stats_api(wifi_mon_collector_element_t *c_elem, wifi_monitor_t *mon_data,
+    unsigned long task_interval_ms)
 {
     wifi_front_haul_bss_t *bss_param = NULL;
     wifi_associated_dev3_t *dev_array = NULL;
     wifi_mon_stats_args_t *args = NULL;
     unsigned int num_devs = 0;
     unsigned int vap_array_index;
-    wifi_associated_dev3_t  *hal_sta;
-    sta_key_t   sta_key;
-    sta_key_t   mld_sta_key;
+    wifi_associated_dev3_t *hal_sta;
+    sta_key_t sta_key;
+    sta_key_t mld_sta_key;
     unsigned int i = 0;
     hash_map_t *sta_map;
-    sta_data_t *sta = NULL,  *tmp_sta = NULL;
+    sta_data_t *sta = NULL, *tmp_sta = NULL;
     int ret = RETURN_OK;
     int mld_mac_present = 0;
-    mac_address_t zero_mac = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    mac_address_t zero_mac = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
     wifi_platform_property_t *wifi_prop = get_wifi_hal_cap_prop();
     struct timespec tv_now, t_diff, t_tmp;
     unsigned int disconnected_time;
+    int rssi = 0;
 
     if (c_elem == NULL) {
-        wifi_util_error_print(WIFI_MON, "%s:%d input arguments are NULL args : %p\n",__func__,__LINE__, c_elem);
+        wifi_util_error_print(WIFI_MON, "%s:%d input arguments are NULL args : %p\n", __func__,
+            __LINE__, c_elem);
         return RETURN_ERR;
     }
 
     args = c_elem->args;
     if (args == NULL) {
-        wifi_util_error_print(WIFI_MON, "%s:%d input arguments are NULL args : %p\n",__func__,__LINE__, args);
+        wifi_util_error_print(WIFI_MON, "%s:%d input arguments are NULL args : %p\n", __func__,
+            __LINE__, args);
         return RETURN_ERR;
     }
 
     UINT radio = get_radio_index_for_vap_index(wifi_prop, args->vap_index);
 
     if ((unsigned)RETURN_ERR == radio) {
-        wifi_util_error_print(WIFI_MON, "%s:%d Error in getting wifi_prop\n", __func__,__LINE__);
+        wifi_util_error_print(WIFI_MON, "%s:%d Error in getting wifi_prop\n", __func__, __LINE__);
         return RETURN_ERR;
     }
 
     if (mon_data->radio_presence[radio] == false) {
-        wifi_util_info_print(WIFI_MON, "%s:%d radio_presence is false for radio : %d\n",__func__,__LINE__, radio);
+        wifi_util_info_print(WIFI_MON, "%s:%d radio_presence is false for radio : %d\n", __func__,
+            __LINE__, radio);
         return RETURN_OK;
     }
 
     bss_param = Get_wifi_object_bss_parameter(args->vap_index);
     if (bss_param == NULL) {
-        wifi_util_error_print(WIFI_MON, "%s:%d Failed to get bss info for vap index %d\n",
-                __func__, __LINE__, args->vap_index);
+        wifi_util_error_print(WIFI_MON, "%s:%d Failed to get bss info for vap index %d\n", __func__,
+            __LINE__, args->vap_index);
         return RETURN_ERR;
     }
 
@@ -197,7 +202,7 @@ int execute_assoc_client_stats_api(wifi_mon_collector_element_t *c_elem, wifi_mo
 
     if (bss_param->enabled == false) {
         wifi_util_dbg_print(WIFI_MON, "%s:%d vap_index %d enabled is false, clearing the sta_map\n",
-                __func__, __LINE__, args->vap_index);
+            __func__, __LINE__, args->vap_index);
         if (mon_data->bssid_data[vap_array_index].sta_map != NULL) {
             sta = hash_map_get_first(mon_data->bssid_data[vap_array_index].sta_map);
             while (sta != NULL) {
@@ -214,8 +219,9 @@ int execute_assoc_client_stats_api(wifi_mon_collector_element_t *c_elem, wifi_mo
 
     ret = wifi_getApAssociatedDeviceDiagnosticResult3(args->vap_index, &dev_array, &num_devs);
     if (ret != RETURN_OK) {
-        wifi_util_error_print(WIFI_MON, "%s : %d  Failed to get AP Associated Devices statistics for vap index %d \r\n",
-                __func__, __LINE__, args->vap_index);
+        wifi_util_error_print(WIFI_MON,
+            "%s : %d  Failed to get AP Associated Devices statistics for vap index %d \r\n",
+            __func__, __LINE__, args->vap_index);
         if (dev_array != NULL) {
             free(dev_array);
             dev_array = NULL;
@@ -223,10 +229,11 @@ int execute_assoc_client_stats_api(wifi_mon_collector_element_t *c_elem, wifi_mo
         return RETURN_ERR;
     }
 
-    wifi_util_dbg_print(WIFI_MON, "%s:%d: diag result: number of devs: %d\n",
-        __func__, __LINE__, num_devs);
+    wifi_util_dbg_print(WIFI_MON, "%s:%d: diag result: number of devs: %d\n", __func__, __LINE__,
+        num_devs);
     for (i = 0; i < num_devs; i++) {
-        wifi_util_dbg_print(WIFI_MON, "cli_MACAddress: %s\ncli_MLDAddr: %s\ncli_MLDEnable: %d\ncli_AuthenticationState: %d\n"
+        wifi_util_dbg_print(WIFI_MON,
+            "cli_MACAddress: %s\ncli_MLDAddr: %s\ncli_MLDEnable: %d\ncli_AuthenticationState: %d\n"
             "cli_LastDataDownlinkRate: %d\ncli_LastDataUplinkRate: %d\ncli_SignalStrength: %d\n"
             "cli_Retransmissions: %d\ncli_Active: %d\ncli_OperatingStandard: %s\n"
             "cli_OperatingChannelBandwidth: %s\ncli_SNR: %d\ncli_InterferenceSources: %s\n"
@@ -237,7 +244,8 @@ int execute_assoc_client_stats_api(wifi_mon_collector_element_t *c_elem, wifi_mo
             "cli_RetransCount: %lu\ncli_FailedRetransCount: %lu\ncli_RetryCount: %lu\n"
             "cli_MultipleRetryCount: %lu\ncli_MaxDownlinkRate: %d\ncli_MaxUplinkRate: %d\n"
             "cli_activeNumSpatialStreams: %d\ncli_TxFrames: %llu\ncli_RxRetries: %llu\n"
-            "cli_RxErrors: %llu\n", to_sta_key(dev_array[i].cli_MACAddress, sta_key),
+            "cli_RxErrors: %llu\n",
+            to_sta_key(dev_array[i].cli_MACAddress, sta_key),
             to_sta_key(dev_array[i].cli_MLDAddr, mld_sta_key), dev_array[i].cli_MLDEnable,
             dev_array[i].cli_AuthenticationState, dev_array[i].cli_LastDataDownlinkRate,
             dev_array[i].cli_LastDataUplinkRate, dev_array[i].cli_SignalStrength,
@@ -253,15 +261,16 @@ int execute_assoc_client_stats_api(wifi_mon_collector_element_t *c_elem, wifi_mo
             dev_array[i].cli_FailedRetransCount, dev_array[i].cli_RetryCount,
             dev_array[i].cli_MultipleRetryCount, dev_array[i].cli_MaxDownlinkRate,
             dev_array[i].cli_MaxUplinkRate, dev_array[i].cli_activeNumSpatialStreams,
-            dev_array[i].cli_TxFrames, dev_array[i].cli_RxRetries,
-            dev_array[i].cli_RxErrors);
+            dev_array[i].cli_TxFrames, dev_array[i].cli_RxRetries, dev_array[i].cli_RxErrors);
     }
 
     events_update_clientdiagdata(num_devs, args->vap_index, dev_array);
     if (mon_data->bssid_data[vap_array_index].sta_map == NULL) {
         mon_data->bssid_data[vap_array_index].sta_map = hash_map_create();
         if (mon_data->bssid_data[vap_array_index].sta_map == NULL) {
-            wifi_util_error_print(WIFI_WEBCONFIG,"%s:%d: hash map create failed for sta_map for vap_index : %d\n", __func__, __LINE__, args->vap_index);
+            wifi_util_error_print(WIFI_MON,
+                "%s:%d: hash map create failed for sta_map for vap_index : %d\n", __func__,
+                __LINE__, args->vap_index);
             if (dev_array != NULL) {
                 free(dev_array);
                 dev_array = NULL;
@@ -274,7 +283,8 @@ int execute_assoc_client_stats_api(wifi_mon_collector_element_t *c_elem, wifi_mo
     sta_map = mon_data->bssid_data[vap_array_index].sta_map;
 
     if (num_devs != 0) {
-        wifi_util_dbg_print(WIFI_MON,"%s:%d ap_index:%d num_devs:%d\r\n", __func__, __LINE__, args->vap_index, num_devs);
+        wifi_util_dbg_print(WIFI_MON, "%s:%d ap_index:%d num_devs:%d\r\n", __func__, __LINE__,
+            args->vap_index, num_devs);
     }
 
     hal_sta = dev_array;
@@ -293,14 +303,16 @@ int execute_assoc_client_stats_api(wifi_mon_collector_element_t *c_elem, wifi_mo
             if (sta == NULL) {
                 sta = (sta_data_t *)calloc(1, sizeof(sta_data_t));
                 if (sta == NULL) {
-                    wifi_util_error_print(WIFI_MON, "%s:%d Failed to allocate memory:sta:%s\n", __func__, __LINE__, sta_key);
+                    wifi_util_error_print(WIFI_MON, "%s:%d Failed to allocate memory:sta:%s\n",
+                        __func__, __LINE__, sta_key);
                     break;
                 }
                 memset(sta, 0, sizeof(sta_data_t));
                 if (mld_mac_present == 0) {
                     memcpy(sta->sta_mac, hal_sta->cli_MACAddress, sizeof(mac_address_t));
                 } else {
-                    wifi_util_dbg_print(WIFI_MON, "%s:%d mld mac %s\n", __func__, __LINE__, to_sta_key(hal_sta->cli_MLDAddr, mld_sta_key));
+                    wifi_util_dbg_print(WIFI_MON, "%s:%d mld mac %s\n", __func__, __LINE__,
+                        to_sta_key(hal_sta->cli_MLDAddr, mld_sta_key));
                     memcpy(sta->sta_mac, hal_sta->cli_MLDAddr, sizeof(mac_address_t));
                     memcpy(sta->link_mac, hal_sta->cli_MACAddress, sizeof(mac_address_t));
                     memcpy(hal_sta->cli_MACAddress, hal_sta->cli_MLDAddr, sizeof(mac_address_t));
@@ -314,16 +326,28 @@ int execute_assoc_client_stats_api(wifi_mon_collector_element_t *c_elem, wifi_mo
                     memcpy(hal_sta->cli_MACAddress, hal_sta->cli_MLDAddr, sizeof(mac_address_t));
                 }
             }
-            memcpy((unsigned char *)&sta->dev_stats_last, (unsigned char *)&sta->dev_stats, sizeof(wifi_associated_dev3_t));
-            memcpy((unsigned char *)&sta->dev_stats, (unsigned char *)hal_sta, sizeof(wifi_associated_dev3_t));
+            memcpy((unsigned char *)&sta->dev_stats_last, (unsigned char *)&sta->dev_stats,
+                sizeof(wifi_associated_dev3_t));
+            memcpy((unsigned char *)&sta->dev_stats, (unsigned char *)hal_sta,
+                sizeof(wifi_associated_dev3_t));
             sta->updated = true;
             sta->dev_stats.cli_Active = true;
             sta->dev_stats.cli_SignalStrength = hal_sta->cli_SignalStrength;
 
-            if (timespeccmp(&(sta->last_connected_time), &(mon_data->bssid_data[vap_array_index].last_sta_update_time), >)) {//sta disconnected before counter update
+            if (timespeccmp(&(sta->last_connected_time),
+                    &(mon_data->bssid_data[vap_array_index].last_sta_update_time),
+                    >)) { // sta disconnected before counter update
                 timespecsub(&tv_now, &(sta->last_connected_time), &t_diff);
             } else {
-                timespecsub(&tv_now, &(mon_data->bssid_data[vap_array_index].last_sta_update_time), &t_diff);
+                timespecsub(&tv_now, &(mon_data->bssid_data[vap_array_index].last_sta_update_time),
+                    &t_diff);
+            }
+
+            // update thresholds if changed
+            if (get_vap_dml_parameters(RSSI_THRESHOLD, &rssi) == 0) {
+                mon_data->sta_health_rssi_threshold = rssi;
+                wifi_util_dbg_print(WIFI_MON, "%s:%d RSSI threshold updated to %d\n", __func__,
+                    __LINE__, mon_data->sta_health_rssi_threshold);
             }
 
             if (sta->dev_stats.cli_SignalStrength >= mon_data->sta_health_rssi_threshold) {
@@ -336,18 +360,32 @@ int execute_assoc_client_stats_api(wifi_mon_collector_element_t *c_elem, wifi_mo
             t_tmp.tv_nsec = sta->total_connected_time.tv_nsec;
             timespecadd(&t_tmp, &t_diff, &(sta->total_connected_time));
 
-            wifi_util_dbg_print(WIFI_MON, "%s:%d mac %s\n", __func__, __LINE__, to_sta_key(sta->dev_stats.cli_MACAddress, sta_key));
-            wifi_util_dbg_print(WIFI_MON, "%s:%d total_connected_time %lld ms\n", __func__, __LINE__, (long long)(sta->total_connected_time.tv_sec*1000)+(sta->total_connected_time.tv_nsec/1000000));
-            wifi_util_dbg_print(WIFI_MON, "%s:%d total_disconnected_time %lld ms\n", __func__, __LINE__, (long long)(sta->total_disconnected_time.tv_sec*1000)+(sta->total_disconnected_time.tv_nsec/1000000));
+            wifi_util_dbg_print(WIFI_MON, "%s:%d mac %s\n", __func__, __LINE__,
+                to_sta_key(sta->dev_stats.cli_MACAddress, sta_key));
+            wifi_util_dbg_print(WIFI_MON, "%s:%d total_connected_time %lld ms\n", __func__,
+                __LINE__,
+                (long long)(sta->total_connected_time.tv_sec * 1000) +
+                    (sta->total_connected_time.tv_nsec / 1000000));
+            wifi_util_dbg_print(WIFI_MON, "%s:%d total_disconnected_time %lld ms\n", __func__,
+                __LINE__,
+                (long long)(sta->total_disconnected_time.tv_sec * 1000) +
+                    (sta->total_disconnected_time.tv_nsec / 1000000));
 
-            wifi_util_dbg_print(WIFI_MON, "Polled station info for, vap:%d ClientMac:%s Uplink rate:%d Downlink rate:%d Packets Sent:%d Packets Received:%d Errors Sent:%d Retrans:%d\n",
-                    (args->vap_index)+1, to_sta_key(sta->dev_stats.cli_MACAddress, sta_key), sta->dev_stats.cli_LastDataUplinkRate, sta->dev_stats.cli_LastDataDownlinkRate,
-                    sta->dev_stats.cli_PacketsSent, sta->dev_stats.cli_PacketsReceived, sta->dev_stats.cli_ErrorsSent, sta->dev_stats.cli_RetransCount);
-            wifi_util_dbg_print(WIFI_MON, "%s:%d cli_TxFrames : %llu cli_RxRetries : %llu cli_RxErrors : %llu  \n",
-                            __func__, __LINE__, hal_sta->cli_TxFrames, hal_sta->cli_RxRetries, hal_sta->cli_RxErrors);
+            wifi_util_dbg_print(WIFI_MON,
+                "Polled station info for, vap:%d ClientMac:%s Uplink rate:%d Downlink rate:%d "
+                "Packets Sent:%d Packets Received:%d Errors Sent:%d Retrans:%d\n",
+                (args->vap_index) + 1, to_sta_key(sta->dev_stats.cli_MACAddress, sta_key),
+                sta->dev_stats.cli_LastDataUplinkRate, sta->dev_stats.cli_LastDataDownlinkRate,
+                sta->dev_stats.cli_PacketsSent, sta->dev_stats.cli_PacketsReceived,
+                sta->dev_stats.cli_ErrorsSent, sta->dev_stats.cli_RetransCount);
+            wifi_util_dbg_print(WIFI_MON,
+                "%s:%d cli_TxFrames : %llu cli_RxRetries : %llu cli_RxErrors : %llu  \n", __func__,
+                __LINE__, hal_sta->cli_TxFrames, hal_sta->cli_RxRetries, hal_sta->cli_RxErrors);
             hal_sta++;
             if (hal_sta == NULL) {
-                wifi_util_error_print(WIFI_MON, "%s:%d hal_sta is NULL: ap_index:%d index:%d num_devs:%d\n", __func__, __LINE__, args->vap_index, i, num_devs);
+                wifi_util_error_print(WIFI_MON,
+                    "%s:%d hal_sta is NULL: ap_index:%d index:%d num_devs:%d\n", __func__, __LINE__,
+                    args->vap_index, i, num_devs);
                 break;
             }
         }
@@ -358,37 +396,52 @@ int execute_assoc_client_stats_api(wifi_mon_collector_element_t *c_elem, wifi_mo
         if (sta->updated == true) {
             sta->updated = false;
         } else {
-            
+
             if (timespecisset(&(sta->total_connected_time))) {
                 if (sta->dev_stats.cli_Active == true) {
                     sta->last_disconnected_time.tv_sec = tv_now.tv_sec;
                     sta->last_disconnected_time.tv_nsec = tv_now.tv_nsec;
                     t_diff.tv_sec = 0;
                     t_diff.tv_nsec = 0;
-                } else if (timespeccmp(&(sta->last_disconnected_time), &(mon_data->bssid_data[vap_array_index].last_sta_update_time), >)) {//sta disconnected before counter update
+                } else if (timespeccmp(&(sta->last_disconnected_time),
+                               &(mon_data->bssid_data[vap_array_index].last_sta_update_time),
+                               >)) { // sta disconnected before counter update
                     timespecsub(&tv_now, &(sta->last_disconnected_time), &t_diff);
                 } else {
-                    timespecsub(&tv_now, &(mon_data->bssid_data[vap_array_index].last_sta_update_time), &t_diff);
+                    timespecsub(&tv_now,
+                        &(mon_data->bssid_data[vap_array_index].last_sta_update_time), &t_diff);
                 }
                 t_tmp.tv_sec = sta->total_disconnected_time.tv_sec;
                 t_tmp.tv_nsec = sta->total_disconnected_time.tv_nsec;
                 timespecadd(&t_tmp, &t_diff, &(sta->total_disconnected_time));
-                
-                wifi_util_dbg_print(WIFI_MON, "%s:%d mac %s\n", __func__, __LINE__, to_sta_key(sta->dev_stats.cli_MACAddress, sta_key));
-                wifi_util_dbg_print(WIFI_MON, "%s:%d total_connected_time %lu ms\n", __func__, __LINE__, (sta->total_connected_time.tv_sec*1000)+(sta->total_connected_time.tv_nsec/1000000));
-                wifi_util_dbg_print(WIFI_MON, "%s:%d total_disconnected_time %lu ms\n", __func__, __LINE__, (sta->total_disconnected_time.tv_sec*1000)+(sta->total_disconnected_time.tv_nsec/1000000));
+
+                wifi_util_dbg_print(WIFI_MON, "%s:%d mac %s\n", __func__, __LINE__,
+                    to_sta_key(sta->dev_stats.cli_MACAddress, sta_key));
+                wifi_util_dbg_print(WIFI_MON, "%s:%d total_connected_time %lu ms\n", __func__,
+                    __LINE__,
+                    (sta->total_connected_time.tv_sec * 1000) +
+                        (sta->total_connected_time.tv_nsec / 1000000));
+                wifi_util_dbg_print(WIFI_MON, "%s:%d total_disconnected_time %lu ms\n", __func__,
+                    __LINE__,
+                    (sta->total_disconnected_time.tv_sec * 1000) +
+                        (sta->total_disconnected_time.tv_nsec / 1000000));
 
                 disconnected_time = (tv_now.tv_sec - sta->last_disconnected_time.tv_sec);
                 sta->dev_stats.cli_Active = false;
-                wifi_util_dbg_print(WIFI_MON, "[%s:%d] Device:%s is disassociated from ap:%d, for %d amount of time, assoc status:%d\n",
-                        __func__, __LINE__, to_sta_key(sta->sta_mac, sta_key), args->vap_index, disconnected_time, sta->dev_stats.cli_Active);
-                if ((disconnected_time > mon_data->bssid_data[vap_array_index].ap_params.rapid_reconnect_threshold) &&  (sta->dev_stats.cli_Active == false)) {
+                wifi_util_dbg_print(WIFI_MON,
+                    "[%s:%d] Device:%s is disassociated from ap:%d, for %d amount of time, assoc "
+                    "status:%d\n",
+                    __func__, __LINE__, to_sta_key(sta->sta_mac, sta_key), args->vap_index,
+                    disconnected_time, sta->dev_stats.cli_Active);
+                if ((disconnected_time > mon_data->bssid_data[vap_array_index]
+                                             .ap_params.rapid_reconnect_threshold) &&
+                    (sta->dev_stats.cli_Active == false)) {
                     tmp_sta = sta;
                 }
             } else {
-                //client never connected, only storing the assoc request.
+                // client never connected, only storing the assoc request.
                 if (tv_now.tv_sec - sta->assoc_frame_data.frame_timestamp > 5) {
-                    //remove this entry after 5 seconds, should not trigger a disconnect event.
+                    // remove this entry after 5 seconds, should not trigger a disconnect event.
                     send_disconnect_event = 0;
                     tmp_sta = sta;
                 }
@@ -396,9 +449,12 @@ int execute_assoc_client_stats_api(wifi_mon_collector_element_t *c_elem, wifi_mo
         }
         sta = hash_map_get_next(sta_map, sta);
         if (tmp_sta != NULL) {
-            wifi_util_info_print(WIFI_MON, "[%s:%d] Device:%s being removed from map of ap:%d, and being deleted\n", __func__, __LINE__, to_sta_key(tmp_sta->sta_mac, sta_key), args->vap_index);
-            wifi_util_info_print(WIFI_MON, "[%s:%d] Station info for, vap:%d ClientMac:%s\n", __func__, __LINE__,
-                    (args->vap_index + 1), to_sta_key(tmp_sta->dev_stats.cli_MACAddress, sta_key));
+            wifi_util_info_print(WIFI_MON,
+                "[%s:%d] Device:%s being removed from map of ap:%d, and being deleted\n", __func__,
+                __LINE__, to_sta_key(tmp_sta->sta_mac, sta_key), args->vap_index);
+            wifi_util_info_print(WIFI_MON, "[%s:%d] Station info for, vap:%d ClientMac:%s\n",
+                __func__, __LINE__, (args->vap_index + 1),
+                to_sta_key(tmp_sta->dev_stats.cli_MACAddress, sta_key));
             if (send_disconnect_event) {
                 send_wifi_disconnect_event_to_ctrl(tmp_sta->sta_mac, args->vap_index);
             }
@@ -426,7 +482,8 @@ int execute_assoc_client_stats_api(wifi_mon_collector_element_t *c_elem, wifi_mo
 
         process_assoc_dev_stats(args, sta_map, &assoc_data, &dev_count);
         if (dev_count == 0) {
-            wifi_util_dbg_print(WIFI_MON, "%s:%d device count is %d\n", __func__, __LINE__, dev_count);
+            wifi_util_dbg_print(WIFI_MON, "%s:%d device count is %d\n", __func__, __LINE__,
+                dev_count);
             if (assoc_data != NULL) {
                 free(assoc_data);
                 assoc_data = NULL;
@@ -434,9 +491,10 @@ int execute_assoc_client_stats_api(wifi_mon_collector_element_t *c_elem, wifi_mo
             wifi_util_dbg_print(WIFI_MON, "%s:%d assoc_data is NULL\n", __func__, __LINE__);
         }
         wifi_provider_response_t *collect_stats;
-        collect_stats = (wifi_provider_response_t *) malloc(sizeof(wifi_provider_response_t));
+        collect_stats = (wifi_provider_response_t *)malloc(sizeof(wifi_provider_response_t));
         if (collect_stats == NULL) {
-            wifi_util_error_print(WIFI_MON, "%s:%d Failed to allocate memory\n", __func__, __LINE__);
+            wifi_util_error_print(WIFI_MON, "%s:%d Failed to allocate memory\n", __func__,
+                __LINE__);
             if (assoc_data != NULL) {
                 free(assoc_data);
                 assoc_data = NULL;
@@ -447,8 +505,11 @@ int execute_assoc_client_stats_api(wifi_mon_collector_element_t *c_elem, wifi_mo
         collect_stats->args.vap_index = args->vap_index;
         collect_stats->stat_pointer = assoc_data;
         collect_stats->stat_array_size = dev_count;
-        wifi_util_dbg_print(WIFI_MON, "Sending assoc client stats event to core of size %d for %d\n", dev_count, collect_stats->args.vap_index);
-        push_monitor_response_event_to_ctrl_queue(collect_stats, sizeof(wifi_provider_response_t), wifi_event_type_monitor, wifi_event_type_collect_stats, NULL);
+        wifi_util_dbg_print(WIFI_MON,
+            "Sending assoc client stats event to core of size %d for %d\n", dev_count,
+            collect_stats->args.vap_index);
+        push_monitor_response_event_to_ctrl_queue(collect_stats, sizeof(wifi_provider_response_t),
+            wifi_event_type_monitor, wifi_event_type_collect_stats, NULL);
         free(assoc_data);
         free(collect_stats);
     }

@@ -25,6 +25,10 @@ typedef struct {
     int eap_failure_count[MAX_VAP];
     int sched_handler_id;
     bool wps_enabled[MAX_NUM_RADIOS];
+    int radio_activity_factor[MAX_NUM_RADIOS];
+    int carriersensethreshold_exceeded[MAX_NUM_RADIOS];
+    int channel_util[MAX_NUM_RADIOS];
+    BOOL cli_stat_list[MAX_VAP];
 } whix_data_t;
 
 #endif //_WIFI_WHIX_H_
