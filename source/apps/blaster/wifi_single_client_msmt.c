@@ -1052,22 +1052,15 @@ void upload_single_client_active_msmt_data(blaster_hashmap_t *sta_info)
         sta_data->sta_active_msmt_data = NULL;
     }
 
-    /* free the sta_data allocated memory for offline clients and remove from hash map*/
-    if ( blaster->curStepData.ApIndex < 0)
-    {
-        if (sta_data != NULL)
-        {
-            pthread_mutex_lock(&blaster->lock);
-            sta_del = (blaster_hashmap_t *) hash_map_remove(blaster->active_msmt_map, to_sta_key(sta_data->sta_mac, sta_key));
-            pthread_mutex_unlock(&blaster->lock);
-            if (sta_del != NULL)
-            {
-                wifi_util_dbg_print(WIFI_BLASTER, "%s : %d removed offline client %s from sta_map\n",__func__,__LINE__, sta_del->sta_mac);
-            }
-            free(sta_data);
-            sta_data = NULL;
-        }
+    /* free the sta_data allocated memory */
+    pthread_mutex_lock(&blaster->lock);
+    sta_del = hash_map_remove(blaster->active_msmt_map, to_sta_key(sta_data->sta_mac, sta_key));
+    pthread_mutex_unlock(&blaster->lock);
+    if (sta_del != NULL) {
+        wifi_util_dbg_print(WIFI_BLASTER, "%s:%d removed client %s from sta_map\n", __func__,
+            __LINE__, to_sta_key(sta_del->sta_mac, sta_key));
     }
+    free(sta_data);
 
     /* check for writer size, if buffer is almost full, skip trailing linklist */
     avro_value_sizeof(&adr, (size_t*)&size);
@@ -1100,6 +1093,7 @@ void upload_single_client_active_msmt_data(blaster_hashmap_t *sta_info)
     }
     //Free up memory
     avro_value_decref(&adr);
+    avro_value_iface_decref(iface);
     avro_writer_free(writer);
 
     size += MAGIC_NUMBER_SIZE + SCHEMA_ID_LENGTH;
