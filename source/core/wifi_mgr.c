@@ -1355,11 +1355,10 @@ int wifi_db_update_psm_values()
     return retval;
 }
 
-static void bus_subscription_handler(bus_handle_t handle, bus_event_t *event,
-    bus_event_sub_t *subscription)
+static void bus_subscription_handler(char *event_name, raw_data_t *p_data)
 {
-
-    wifi_util_dbg_print(WIFI_MGR, "%s:%d bus_subscription_handler\n", __func__, __LINE__);
+    (void)p_data;
+    wifi_util_dbg_print(WIFI_MGR,"%s:%d bus_subscription_handler:%s\n", __func__, __LINE__, event_name);
 }
 
 int wifi_mgr_bus_subsription(bus_handle_t *handle)

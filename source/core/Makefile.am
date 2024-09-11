@@ -86,7 +86,7 @@ OneWifi_SOURCES += $(top_srcdir)/source/stats/wifi_monitor.c $(top_srcdir)/sourc
 
 OneWifi_SOURCES += $(top_srcdir)/source/stubs/wifi_stubs.c
 
-OneWifi_SOURCES += $(top_srcdir)/source/platform/rdkb/bus.c $(top_srcdir)/source/platform/common/common.c
+OneWifi_SOURCES += $(top_srcdir)/source/platform/rdkb/bus.c $(top_srcdir)/source/platform/common/common.c $(top_srcdir)/source/platform/common/bus_common.c
 
 OneWifi_SOURCES += wifi_easy_connect.c
 OneWifi_SOURCES += $(top_srcdir)/source/stats/wifi_associated_devices_msmt.c

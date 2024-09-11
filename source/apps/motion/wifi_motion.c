@@ -638,11 +638,14 @@ queue_t *update_csi_local_queue_from_motion_queue()
     return local_csi_queue;
 }
 
-bus_error_t csi_table_addrowhandler(bus_handle_t *handle, char const* tableName, char const* aliasName, uint32_t* instNum)
+bus_error_t csi_table_addrowhandler(char const* tableName, char const* aliasName, uint32_t* instNum)
 {
+    UNREFERENCED_PARAMETER(aliasName);
+
     static int instanceCounter = 1;
     queue_t *local_csi_queue = NULL;
     csi_data_t *csi_data;
+
     *instNum = instanceCounter++;
 
     wifi_util_dbg_print(WIFI_APPS, "%s(): %s %d\n", __FUNCTION__, tableName, *instNum);
@@ -667,12 +670,10 @@ bus_error_t csi_table_addrowhandler(bus_handle_t *handle, char const* tableName,
     queue_destroy(local_csi_queue);
 
     wifi_util_dbg_print(WIFI_APPS, "%s(): exit\n", __FUNCTION__);
-    UNREFERENCED_PARAMETER(handle);
-    UNREFERENCED_PARAMETER(aliasName);
     return bus_error_success;
 }
 
-bus_error_t csi_table_removerowhandler(bus_handle_t *handle, char const *rowName)
+bus_error_t csi_table_removerowhandler(char const *rowName)
 {
     csi_data_t *tmp_csi_data =  NULL;
     unsigned int itr, qcount;
@@ -703,15 +704,12 @@ bus_error_t csi_table_removerowhandler(bus_handle_t *handle, char const *rowName
     push_csi_data_dml_to_ctrl_queue(local_csi_queue);
     queue_destroy(local_csi_queue);
 
-    UNREFERENCED_PARAMETER(handle);
-
     return bus_error_success;
 }
 
-bus_error_t csi_set_handler(bus_handle_t *handle, bus_property_t property, bus_set_handler_options_t options)
+bus_error_t csi_set_handler(char *event_name, raw_data_t *p_data)
 {
-    bus_error_t  status = bus_error_success;
-    char const* name;
+    char const* name = event_name;
     unsigned int idx = 0;
     int ret, apply = false;
     char parameter[MAX_EVENT_NAME_SIZE];
@@ -721,11 +719,7 @@ bus_error_t csi_set_handler(bus_handle_t *handle, bus_property_t property, bus_s
     bool found = false;
     unsigned int csi_client_count;
     mac_address_t csi_client_list[MAX_NUM_CSI_CLIENTS];
-    raw_data_t data;
 
-    memset(&data, 0, sizeof(raw_data_t));
-
-    name = get_bus_descriptor()->bus_property_get_name_fn(handle, property);
     if (!name) {
         wifi_util_error_print(WIFI_APPS, "%s %d: invalid bus property name %s\n", __FUNCTION__, __LINE__, name);
         return bus_error_invalid_input;
@@ -758,19 +752,16 @@ bus_error_t csi_set_handler(bus_handle_t *handle, bus_property_t property, bus_s
         if (strcmp(parameter, "ClientMaclist") == 0) {
             char *pTmp = NULL;
 
-            status = get_bus_descriptor()->bus_property_data_get_fn(handle, property, options, &data);
-            if (data.data_type != bus_data_type_string) {
-                wifi_util_error_print(WIFI_CTRL,"%s:%d '%s' bus_property_data_get_fn failed with data_type:%d, status:%d\n",
-                    __func__, __LINE__, name, data.data_type, status);
+            if (p_data->data_type != bus_data_type_string) {
+                wifi_util_error_print(WIFI_CTRL,"%s:%d-%s bus wrong data_type:%02x\n", __func__, __LINE__, name, p_data->data_type);
                 queue_destroy(local_csi_queue);
                 return bus_error_invalid_input;
             }
 
-            pTmp = (char *)data.raw_data.bytes;
+            pTmp = (char *)p_data->raw_data.bytes;
 
-            if ((status != bus_error_success) || pTmp == NULL) {
-                wifi_util_error_print(WIFI_CTRL,"%s:%d '%s' bus_property_data_get_fn failed with data_type:%d, status:%d\n",
-                      __func__, __LINE__, name, data.data_type, status);
+            if (pTmp == NULL) {
+                wifi_util_error_print(WIFI_CTRL,"%s:%d-%s wrong bus data:%02x\n", __func__, __LINE__, name, p_data->data_type);
                 queue_destroy(local_csi_queue);
                 return bus_error_invalid_input;
             } else {
@@ -850,21 +841,13 @@ bus_error_t csi_set_handler(bus_handle_t *handle, bus_property_t property, bus_s
         } else if (strcmp(parameter, "Enable") == 0) {
             bool enabled;
 
-            status = get_bus_descriptor()->bus_property_data_get_fn(handle, property, options, &data);
-            if (data.data_type != bus_data_type_boolean) {
-                wifi_util_error_print(WIFI_CTRL,"%s:%d '%s' bus_property_data_get_fn failed with data_type:%d, status:%d\n",
-                   __func__, __LINE__, name, data.data_type, status);
-                queue_destroy(local_csi_queue);
-                return bus_error_invalid_input;
-            }
-
-            enabled = data.raw_data.b;
-
-            if (status != bus_error_success) {
-                wifi_util_error_print(WIFI_APPS,"%s:%d '%s' Called get handler with wrong data type:%d\n", __func__, __LINE__, name, data.data_type);
+            if (p_data->data_type != bus_data_type_boolean) {
+                wifi_util_error_print(WIFI_CTRL,"%s:%d '%s' wrong bus data_type:%02x\n",
+                   __func__, __LINE__, name, p_data->data_type);
                 queue_destroy(local_csi_queue);
                 return bus_error_invalid_input;
             } else {
+                enabled = p_data->raw_data.b;
                 if (enabled != csi_data->enabled) {
                     //check new configuration did not exceed the max number of csi clients
                     num_unique_mac = 0;
@@ -914,19 +897,17 @@ bus_error_t csi_set_handler(bus_handle_t *handle, bus_property_t property, bus_s
     return bus_error_invalid_input;
 }
 
-bus_error_t csi_get_handler(bus_handle_t *handle, bus_property_t property, bus_get_handler_options_t options)
+bus_error_t csi_get_handler(char *event_name, raw_data_t *p_data)
 {
     bus_error_t status = bus_error_success;
-    char const* name;
+    char const* name = event_name;
     unsigned int idx = 0;
     int ret;
     char parameter[MAX_EVENT_NAME_SIZE];
     unsigned int itr, count, qcount;
     csi_data_t *csi_data =  NULL;
     queue_t *csi_data_queue = get_csi_data_queue();
-    raw_data_t data;
 
-    name = get_bus_descriptor()->bus_property_get_name_fn(handle, property);
     if (!name) {
         wifi_util_dbg_print(WIFI_APPS, "%s(): invalid property name : %s \n", __FUNCTION__, name);
         return bus_error_invalid_input;
@@ -937,16 +918,13 @@ bus_error_t csi_get_handler(bus_handle_t *handle, bus_property_t property, bus_g
         return bus_error_general;
     }
 
-    memset(&data, 0, sizeof(raw_data_t));
-
     wifi_util_dbg_print(WIFI_APPS, "%s(): %s\n", __FUNCTION__, name);
     if (strcmp(name, "Device.WiFi.X_RDK_CSINumberOfEntries") == 0) {
         count = queue_count(csi_data_queue);
 
-        data.data_type = bus_data_type_uint32;
-        data.raw_data.u32 = (uint32_t)count;
+        p_data->data_type = bus_data_type_uint32;
+        p_data->raw_data.u32 = (uint32_t) count;
 
-        status = get_bus_descriptor()->bus_property_data_set_fn(handle, property, options, &data);
         return status;
     }
 
@@ -982,18 +960,20 @@ bus_error_t csi_get_handler(bus_handle_t *handle, bus_property_t property, bus_g
                 tmp_cli_list[len-1] = '\0';
             }
 
-            memset(&data, 0, sizeof(raw_data_t));
-            data.data_type = bus_data_type_string;
-            data.raw_data.bytes = (void *)tmp_cli_list;
-
-            status = get_bus_descriptor()->bus_property_data_set_fn(handle, property, options, &data);
+            uint32_t str_len = strlen(tmp_cli_list) + 1;
+            p_data->data_type = bus_data_type_string;
+            p_data->raw_data.bytes = malloc(str_len);
+            if (p_data->raw_data.bytes == NULL) {
+                wifi_util_error_print(WIFI_APPS,"%s:%d memory allocation is failed:%d\r\n",__func__,
+                    __LINE__, str_len);
+                return bus_error_out_of_resources;
+            }
+            strncpy((char *)p_data->raw_data.bytes, tmp_cli_list, str_len);
+            p_data->raw_data_len = str_len;
             return status;
         } else if (strcmp(parameter, "Enable") == 0) {
-            memset(&data, 0, sizeof(raw_data_t));
-            data.data_type = bus_data_type_boolean;
-            data.raw_data.b = csi_data->enabled;
-
-            status = get_bus_descriptor()->bus_property_data_set_fn(handle, property, options, &data);
+            p_data->data_type = bus_data_type_boolean;
+            p_data->raw_data.b = csi_data->enabled;
             return status;
         }
     }
@@ -1161,10 +1141,8 @@ csi_session_t *get_csi_session_from_session_num(int session_num)
     return NULL;
 }
 
-bus_error_t eventHandler(bus_handle_t *handle, bus_event_sub_action_t action, const char* eventName, bus_filter_t filter, int32_t interval, bool* autoPublish)
+bus_error_t eventHandler(char *eventName, bus_event_sub_action_t action, int32_t interval, bool* autoPublish)
 {
-    UNREFERENCED_PARAMETER(handle);
-    UNREFERENCED_PARAMETER(filter);
     char tmp[128] = {0};
 
     int idx = -1;
@@ -1712,17 +1690,23 @@ int motion_init(wifi_app_t *app, unsigned int create_flag)
     bus_error_t  rc = bus_error_success;
     uint32_t num_elements = 0;
     char *component_name = "WifiAppsMotion";
+
     bus_data_element_t dataElements[] = {
         { WIFI_CSI_TABLE, bus_element_type_table,
-            { NULL, NULL, csi_table_addrowhandler, csi_table_removerowhandler, NULL, NULL}, slow_speed, ZERO_TABLE},
+            { NULL, NULL, csi_table_addrowhandler, csi_table_removerowhandler, NULL, NULL}, slow_speed, ZERO_TABLE,
+            { bus_data_type_object, false, 0, 0, 0, NULL } },
         { WIFI_CSI_DATA, bus_element_type_event,
-            { NULL, NULL, NULL, NULL, eventHandler, NULL}, slow_speed, ZERO_TABLE},
+            { NULL, NULL, NULL, NULL, eventHandler, NULL}, slow_speed, ZERO_TABLE,
+            { bus_data_type_bytes, false, 0, 0, 0, NULL } },
         { WIFI_CSI_CLIENTMACLIST, bus_element_type_property,
-            { csi_get_handler, csi_set_handler, NULL, NULL, NULL, NULL}, slow_speed, ZERO_TABLE},
+            { csi_get_handler, csi_set_handler, NULL, NULL, NULL, NULL}, slow_speed, ZERO_TABLE,
+            { bus_data_type_string, true, 0, 0, 0, NULL } },
         { WIFI_CSI_ENABLE, bus_element_type_property,
-            { csi_get_handler, csi_set_handler, NULL, NULL, NULL, NULL}, slow_speed, ZERO_TABLE},
+            { csi_get_handler, csi_set_handler, NULL, NULL, NULL, NULL}, slow_speed, ZERO_TABLE,
+            { bus_data_type_boolean, true, 0, 0, 0, NULL } },
         { WIFI_CSI_NUMBEROFENTRIES, bus_element_type_property,
-            { csi_get_handler, NULL, NULL, NULL, NULL, NULL}, slow_speed, ZERO_TABLE},
+            { csi_get_handler, NULL, NULL, NULL, NULL, NULL}, slow_speed, ZERO_TABLE,
+            { bus_data_type_uint32, true, 0, 0, 0, NULL } }
     };
 
     //Creating named Pipe.
