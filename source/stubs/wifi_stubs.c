@@ -24,7 +24,7 @@
 #include "wifi_hal.h"
 #include "wifi_stubs.h"
 
-#ifdef ONEWIFI_RDKB_SUPPORT
+#ifdef ONEWIFI_RDKB_APP_SUPPORT
 extern int t2_event_d(char *marker, int value);
 extern int t2_event_s(char *marker, char *buff);
 extern int v_secure_system(const char *command);
