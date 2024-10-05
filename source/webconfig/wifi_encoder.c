@@ -268,6 +268,12 @@ webconfig_error_t encode_radio_object(const rdk_wifi_radio_t *radio, cJSON *radi
     //Tidle
     cJSON_AddNumberToObject(radio_object, "Tidle", radio_feat->OffChanTidleInSec);
 
+    //DfsTimer
+    cJSON_AddNumberToObject(radio_object, "DfsTimer", radio_info->DFSTimer);
+
+    //RadarDetected
+    cJSON_AddStringToObject(radio_object, "RadarDetected", radio_info->radarDetected);
+
     return webconfig_error_none;
 }
 

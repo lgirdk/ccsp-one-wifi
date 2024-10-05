@@ -2136,6 +2136,11 @@ Radio_GetParamIntValue
         return TRUE;
     }
 
+    if( AnscEqualString(ParamName, "X_COMCAST_COM_DFSTimer", TRUE) ) {
+        *pInt = pcfg->DFSTimer;
+        return TRUE;
+    }
+
     /* CcspTraceWarning(("Unsupported parameter '%s'\n", ParamName)); */
     return FALSE;
 }
@@ -2451,7 +2456,7 @@ Radio_GetParamUlongValue
 #endif
         return TRUE;
     }
-  
+
     /* CcspTraceWarning(("Unsupported parameter '%s'\n", ParamName)); */
     return FALSE;
 }
@@ -3393,6 +3398,20 @@ Radio_SetParamIntValue
 
 	return TRUE;
     }
+
+    if( AnscEqualString(ParamName, "X_COMCAST_COM_DFSTimer", TRUE) ) {
+        if(iValue < 30) {
+            wifi_util_error_print(WIFI_DMCLI, "%s:%d: Invalid Timer value %d for the country code : %d\n", __func__, __LINE__, iValue, wifiRadioOperParam->countryCode);
+            return FALSE;
+        }
+
+        wifiRadioOperParam->DFSTimer = iValue;
+        is_radio_config_changed = TRUE;
+        wifi_util_dbg_print(WIFI_DMCLI,"%s:%d: DFSTimer:%d iValue:%d \n",__func__, __LINE__, wifiRadioOperParam->DFSTimer,iValue);
+
+        return TRUE;
+    }
+
     return FALSE;
 }
 

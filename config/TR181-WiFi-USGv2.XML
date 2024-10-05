@@ -1429,6 +1429,12 @@ INSTMSMT_PH2 -->
                             <syntax>bool</syntax>
                             <writable>true</writable>
                         </parameter>
+                        <parameter>
+                            <name>X_COMCAST_COM_DFSTimer</name>
+                            <type>int</type>
+                            <syntax>int</syntax>
+                            <writable>true</writable>
+                        </parameter>
                     </parameters>
                     <objects>
 <!-- INSTMSMT_PH2

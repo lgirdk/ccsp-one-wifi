@@ -2720,6 +2720,14 @@ webconfig_error_t decode_radio_object(const cJSON *obj_radio, rdk_wifi_radio_t *
     decode_param_integer(obj_radio, "Tidle", param);
     radio_feat->OffChanTidleInSec = param->valuedouble;
 
+    // DfsTimer
+    decode_param_integer(obj_radio, "DfsTimer", param);
+    radio_info->DFSTimer = param->valuedouble;
+
+    //RadarDetected
+    decode_param_string(obj_radio, "RadarDetected", param);
+    strncpy(radio_info->radarDetected, param->valuestring, sizeof(radio_info->radarDetected));
+
     return webconfig_error_none;
 }
 

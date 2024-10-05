@@ -1,6 +1,6 @@
 {
   "name": "Wifi_Rdk_Database",
-  "version": "1.00.027",
+  "version": "1.00.030",
   "cksum": "2353365742 523",
   "tables": {
     "Wifi_Device_Config": {
@@ -1472,6 +1472,24 @@
             },
             "min": 0,
             "max": 63
+          }
+        },
+        "dfs_timer": {
+          "type": {
+            "key": {
+              "type": "integer"
+            },
+            "min": 0,
+            "max": 60
+          }
+        },
+        "radar_detected": {
+          "type": {
+            "key": {
+              "type": "string"
+            },
+            "min": 0,
+            "max": 1
           }
         }
       },

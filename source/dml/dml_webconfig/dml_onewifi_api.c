@@ -1328,6 +1328,7 @@ void update_dml_radio_default() {
         radio_cfg[i].OnOffPushButtonTime = 0;
         radio_cfg[i].MulticastRate = 0;
         radio_cfg[i].MCS = 0;
+        radio_cfg[i].DFSTimer = 30;
         if (radio_cfg[i].SupportedFrequencyBands == WIFI_FREQUENCY_2_4_BAND) {
             radio_cfg[i].MaxBitRate = 1147;
             strncpy(radio_cfg[i].ChannelsInUse,"1",sizeof(radio_cfg[i].ChannelsInUse)-1);

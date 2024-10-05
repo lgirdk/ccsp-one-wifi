@@ -86,6 +86,7 @@ typedef struct {
     INT     OnOffPushButtonTime;
     INT     MulticastRate;
     INT     MCS;
+    ULONG   DFSTimer;
 } dml_radio_default;
 
 typedef struct {

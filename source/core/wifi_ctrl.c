@@ -449,8 +449,8 @@ int start_radios(rdk_dev_mode_type_t mode)
         }
 
         //In case of reboot/FR, Non DFS channel will be selected and radio will switch to DFS Channel after 1 min.
-        if( ((wifi_radio_oper_param->band == WIFI_FREQUENCY_5_BAND ) || ( wifi_radio_oper_param->band == WIFI_FREQUENCY_5L_BAND ) || ( wifi_radio_oper_param->band == WIFI_FREQUENCY_5H_BAND)) &&
-            (wifi_radio_oper_param->channel >= 52 && wifi_radio_oper_param->channel <= 144)) {
+        if( (wifi_radio_oper_param->band == WIFI_FREQUENCY_5_BAND ) || ( wifi_radio_oper_param->band == WIFI_FREQUENCY_5L_BAND ) || ( wifi_radio_oper_param->band == WIFI_FREQUENCY_5H_BAND)) {
+            if (wifi_radio_oper_param->channel >= 52 && wifi_radio_oper_param->channel <= 144) {
                 if( mode == rdk_dev_mode_type_gw ) {
                     dfs_channel = wifi_radio_oper_param->channel;
                     wifi_radio_oper_param->channel = 44;
@@ -461,6 +461,12 @@ int start_radios(rdk_dev_mode_type_t mode)
                     wifi_radio_oper_param->channel = 36;
                     wifi_radio_oper_param->op_class = 1;
                 }
+            }
+
+            if (strcmp(wifi_radio_oper_param->radarDetected, " ")) {
+                wifi_util_info_print(WIFI_CTRL,"%s:%d Triggering dfs_nop_start_timer for radar:%s \n",__func__, __LINE__, wifi_radio_oper_param->radarDetected);
+                scheduler_add_timer_task(ctrl->sched, FALSE, NULL, dfs_nop_start_timer, NULL, (60 * 1000), 1, FALSE);
+            }
         }
 
         wifi_platform_property_t *wifi_prop =  (wifi_platform_property_t *) get_wifi_hal_cap_prop();

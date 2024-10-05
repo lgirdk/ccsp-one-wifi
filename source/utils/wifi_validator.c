@@ -2131,6 +2131,14 @@ int validate_radio_vap(const cJSON *wifi, wifi_radio_operationParam_t *wifi_radi
         validate_param_integer(wifi, "Tidle", param);
         wifi_radio_feat_info->OffChanTidleInSec = param->valuedouble;
 
+        // DFSTimer
+        validate_param_integer(wifi, "DfsTimer", param);
+        wifi_radio_info->DFSTimer = param->valuedouble;
+
+        //RadarDetected
+        validate_param_string(wifi, "RadarDetected", param);
+        copy_string(wifi_radio_info->radarDetected, param->valuestring );
+
     return RETURN_OK;
 }
 
