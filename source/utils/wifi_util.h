@@ -386,6 +386,7 @@ bool is_6g_supported_device(wifi_platform_property_t *wifi_prop);
 bool is_vap_param_config_changed(wifi_vap_info_t *vap_info_old, wifi_vap_info_t *vap_info_new,
     rdk_wifi_vap_info_t *rdk_old, rdk_wifi_vap_info_t *rdk_new, bool isSta);
 int scan_mode_type_conversion(wifi_neighborScanMode_t *scan_mode_enum, char *scan_mode_str, int scan_mode_len, unsigned int conv_type);
+int get_partner_id(char *partner_id);
 #ifdef __cplusplus
 }
 #endif
