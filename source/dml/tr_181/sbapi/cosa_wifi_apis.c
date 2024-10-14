@@ -325,6 +325,55 @@ struct wifiDataTxRateHalMap wifiDataTxRateMap[] =
 *
 **************************************************************************/
 
+ANSC_STATUS cosaWifiRadioRestart()
+{
+    unsigned int radio = 0;
+    unsigned int vap = 0;
+    unsigned int num_of_radios = getNumberRadios();
+    unsigned int total_vaps = getTotalNumberVAPs();
+    rdk_wifi_vap_info_t *rdk_vap_info;
+
+    for (radio = 0; radio < num_of_radios; radio++) {
+        wifi_util_dbg_print(WIFI_DMCLI, "%s:%d Radio stats flag change to false for Radio - %d\n",
+            __func__, __LINE__, radio);
+        if (radio_stats_flag_change(radio, false) != ANSC_STATUS_SUCCESS) {
+            wifi_util_error_print(WIFI_DMCLI,
+                "%s:%d radio_stats_flag_change failed for Radio - %d\n", __func__, __LINE__, radio);
+            return ANSC_STATUS_FAILURE;
+        }
+    }
+
+    for (vap = 0; vap < total_vaps; vap++) {
+        wifi_util_dbg_print(WIFI_DMCLI, "%s:%d WiFi stats flag change to false for VAP - %d\n",
+            __func__, __LINE__, vap);
+        if (wifi_stats_flag_change(vap, false, 0) != ANSC_STATUS_SUCCESS) {
+            wifi_util_error_print(WIFI_DMCLI, "%s:%d wifi_stats_flag_change failed for VAP - %d\n",
+                __func__, __LINE__, vap);
+            return ANSC_STATUS_FAILURE;
+        }
+
+        wifi_util_dbg_print(WIFI_DMCLI, "%s:%d VAP stats flag change to false for VAP - %d\n",
+            __func__, __LINE__, vap);
+        if (vap_stats_flag_change(vap, false) != ANSC_STATUS_SUCCESS) {
+            wifi_util_error_print(WIFI_DMCLI, "%s:%d vap_stats_flag_change failed for VAP - %d\n",
+                __func__, __LINE__, vap);
+            return ANSC_STATUS_FAILURE;
+        }
+
+        // Set ForceApply flag to true for all VAPs
+        rdk_vap_info = (rdk_wifi_vap_info_t *)get_dml_cache_rdk_vap_info(vap);
+        if (rdk_vap_info != NULL) {
+            rdk_vap_info->force_apply = true;
+            set_dml_cache_vap_config_changed(vap);
+            set_cac_cache_changed(vap);
+        }
+    }
+    wifi_util_info_print(WIFI_DMCLI, "%s:%d Resetting Radio and VAP stats success\n", __func__,
+        __LINE__);
+
+    return ANSC_STATUS_SUCCESS;
+}
+
 UINT getRegulatoryDomainFromEnums(wifi_countrycode_type_t countryCode, wifi_operating_env_t operatingEnvironment, char *regulatoryDomainStr)
 {
     unsigned int i;

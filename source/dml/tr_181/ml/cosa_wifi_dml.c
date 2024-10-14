@@ -824,7 +824,7 @@ WiFi_SetParamBoolValue
 	    wifi_util_dbg_print(WIFI_DMCLI,"%s:%d ApplyRadioSettings push to queue \n",__func__, __LINE__);
             if (push_radio_dml_cache_to_one_wifidb() == RETURN_ERR)
             {
-                wifi_util_dbg_print(WIFI_DMCLI,"%s:%d ApplyRadioSettings falied \n",__func__, __LINE__);
+                wifi_util_dbg_print(WIFI_DMCLI,"%s:%d ApplyRadioSettings failed \n",__func__, __LINE__);
                 return FALSE;
             }
             radio_reset_count++;
@@ -843,7 +843,7 @@ WiFi_SetParamBoolValue
             wifi_util_dbg_print(WIFI_DMCLI,"%s:%d ApplyAccessPointSettings push to queue \n",__func__, __LINE__);
             if (push_vap_dml_cache_to_one_wifidb() == RETURN_ERR)
             {
-                wifi_util_dbg_print(WIFI_DMCLI,"%s:%d ApplyAccessPointSettings falied \n",__func__, __LINE__);
+                wifi_util_dbg_print(WIFI_DMCLI,"%s:%d ApplyAccessPointSettings failed \n",__func__, __LINE__);
                 return FALSE;
             }
             last_vap_change = AnscGetTickInSeconds();
@@ -865,12 +865,44 @@ WiFi_SetParamBoolValue
         return TRUE;
     }
 
-    if(AnscEqualString(ParamName, "X_CISCO_COM_ResetRadios", TRUE))
-    {
-	radio_reset_count++;
+    if (AnscEqualString(ParamName, "X_CISCO_COM_ResetRadios", TRUE)) {
+        wifi_util_info_print(WIFI_DMCLI, "%s:%d Restarting Radios & VAPs \n", __func__, __LINE__);
+        is_radio_config_changed = TRUE; // Force apply all Radio configuration
+        g_update_wifi_region = TRUE; // Force apply all Global configuration
+
+        // Clear the stats, clients data, etc in cosaWifiRadioRestart()
+        if (cosaWifiRadioRestart() != ANSC_STATUS_SUCCESS) {
+            wifi_util_error_print(WIFI_DMCLI, "%s:%d cosaWifiRadioRestart failed \n", __func__,
+                __LINE__);
+            return FALSE;
+        }
+        // Force apply radio configuration
+        if (push_radio_dml_cache_to_one_wifidb() == RETURN_ERR) {
+            wifi_util_error_print(WIFI_DMCLI, "%s:%d push_radio_dml_cache_to_one_wifidb failed \n",
+                __func__, __LINE__);
+            return FALSE;
+        }
+        last_radio_change = AnscGetTickInSeconds();
+        // Force apply Global configuration
+        if (g_update_wifi_region) {
+            if (push_global_config_dml_cache_to_one_wifidb() == RETURN_ERR) {
+                wifi_util_error_print(WIFI_DMCLI,
+                    "%s:%d push_global_config_dml_cache_to_one_wifidb failed \n", __func__,
+                    __LINE__);
+                return FALSE;
+            }
+        }
+        // Force apply VAP configuration
+        if (push_vap_dml_cache_to_one_wifidb() == RETURN_ERR) {
+            wifi_util_error_print(WIFI_DMCLI, "%s:%d push_vap_dml_cache_to_one_wifidb failed \n",
+                __func__, __LINE__);
+            return FALSE;
+        }
+        last_vap_change = AnscGetTickInSeconds();
+        wifi_util_info_print(WIFI_DMCLI, "%s:%d Restart Wi-Fi success \n", __func__, __LINE__);
+        radio_reset_count++;
         return TRUE;
     }
-
 
     if (AnscEqualString(ParamName, "X_RDKCENTRAL-COM_WiFiHost_Sync", TRUE))
     {
@@ -6959,7 +6991,7 @@ AccessPoint_SetParamBoolValue
         set_dml_cache_vap_config_changed(instance_number - 1);
         if (push_vap_dml_cache_to_one_wifidb() == RETURN_ERR)
         {
-            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Apply BSSTransitionActivated falied \n",__func__, __LINE__);
+            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Apply BSSTransitionActivated failed \n",__func__, __LINE__);
             return FALSE;
         }
         return  TRUE;
@@ -6999,7 +7031,7 @@ AccessPoint_SetParamBoolValue
         set_dml_cache_vap_config_changed(instance_number - 1);
         if (push_vap_dml_cache_to_one_wifidb() == RETURN_ERR)
         {
-            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Apply NeighborReportActivated falied \n",__func__, __LINE__);
+            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Apply NeighborReportActivated failed \n",__func__, __LINE__);
             return FALSE;
         }
         return TRUE;
@@ -7024,7 +7056,7 @@ AccessPoint_SetParamBoolValue
             wifi_util_dbg_print(WIFI_DMCLI,"%s:%d X_RDKCENTRAL-COM_InterworkingApplySettings push to queue \n",__func__, __LINE__);
             if (push_vap_dml_cache_to_one_wifidb() == RETURN_ERR)
             {
-                wifi_util_dbg_print(WIFI_DMCLI,"%s:%d X_RDKCENTRAL-COM_InterworkingApplySettings falied \n",__func__, __LINE__);
+                wifi_util_dbg_print(WIFI_DMCLI,"%s:%d X_RDKCENTRAL-COM_InterworkingApplySettings failed \n",__func__, __LINE__);
                 return FALSE;
             }
             last_vap_change = AnscGetTickInSeconds();
@@ -17201,7 +17233,7 @@ MacFiltTab_DelEntry
 
         // Send blob
         if(push_acl_list_dml_cache_to_one_wifidb(vap_info) == RETURN_ERR) {
-            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Mac_Filter falied \n",__func__, __LINE__);
+            wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Mac_Filter failed \n",__func__, __LINE__);
             return ANSC_STATUS_FAILURE;
         }
 
@@ -17397,7 +17429,7 @@ MacFiltTab_Commit
 
     wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Inside Commit \n",__func__, __LINE__);
     if (push_acl_list_dml_cache_to_one_wifidb(vap_info) == RETURN_ERR) {
-        wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Mac_Filter falied \n",__func__, __LINE__);
+        wifi_util_dbg_print(WIFI_DMCLI,"%s:%d Mac_Filter failed \n",__func__, __LINE__);
         return -1;
     }
     return 0;    
