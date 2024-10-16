@@ -268,6 +268,11 @@ typedef struct {
     int failure_reason;
 } radius_eap_data_t;
 
+typedef struct{
+    unsigned int apIndex;
+    int radius_switch_reason;
+} radius_fallback_and_failover_data_t;
+
 typedef struct {
     unsigned long csi_session_num;
     bool enabled;

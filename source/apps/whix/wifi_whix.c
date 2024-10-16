@@ -2179,11 +2179,43 @@ void radius_eap_failure_event_marker(wifi_app_t *app, void *data)
     }
 }
 
+void radius_failover_and_fallback_marker(wifi_app_t *app, void *data)
+{
+    char tmp[128]={0};
+    char eventName[1024]={0};
+    char telemetry_buf[1024]={0};
+    radius_fallback_and_failover_data_t *radius_d = (radius_fallback_and_failover_data_t *) data;
+
+    get_formatted_time(tmp);
+
+   if(radius_d->radius_switch_reason == RADIUS_FAILOVER) {
+        if (isVapHotspotSecure5g(radius_d->apIndex) || \
+            isVapHotspotSecure6g(radius_d->apIndex) || \
+            isVapHotspotOpen5g(radius_d->apIndex) || \
+            isVapHotspotOpen6g(radius_d->apIndex)) {
+            snprintf(telemetry_buf, sizeof(telemetry_buf), "XWIFI_Radius_Failover_%d_split", (radius_d->apIndex)+1);
+            get_stubs_descriptor()->t2_event_s_fn(telemetry_buf, "Primary to Secondary");
+            snprintf(eventName, sizeof(eventName), "%s XWIFI_Radius_Failover_%d_split\n", tmp, (radius_d->apIndex)+1);
+            write_to_file("/rdklogs/logs/wifihealth.txt", eventName);
+        }
+    } else if (radius_d->radius_switch_reason == RADIUS_FALLBACK) {
+        if (isVapHotspotSecure5g(radius_d->apIndex) || isVapHotspotSecure6g(radius_d->apIndex) || isVapHotspotOpen5g(radius_d->apIndex) || isVapHotspotOpen6g(radius_d->apIndex)) {
+            snprintf(telemetry_buf, sizeof(telemetry_buf), "XWIFI_Radius_Fallback_%d_split", (radius_d->apIndex)+1);
+            get_stubs_descriptor()->t2_event_s_fn(telemetry_buf, "Secondary to Primary");
+            snprintf(eventName, sizeof(eventName), "%s XWIFI_Radius_Fallback_%d_split\n", tmp, (radius_d->apIndex)+1);
+            write_to_file("/rdklogs/logs/wifihealth.txt", eventName);
+        }
+    }
+}
+
 void handle_whix_hal_ind_event(wifi_app_t *app, wifi_event_t *event)
 {
     switch(event->sub_type) {
         case wifi_event_radius_eap_failure:
             radius_eap_failure_event_marker(app, event->u.core_data.msg);
+        break;
+        case wifi_event_radius_fallback_and_failover:
+            radius_failover_and_fallback_marker(app,event->u.core_data.msg);
         break;
         default:
         break;

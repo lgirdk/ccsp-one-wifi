@@ -2399,6 +2399,50 @@ bus_error_t ap_get_handler(bus_handle_t *handle, bus_property_t property,
     return bus_error_invalid_input;
 }
 
+bus_error_t ap_get_radius_connected_endpoint(bus_handle_t *handle, bus_property_t property,
+    bus_get_handler_options_t options)
+{
+    char *name = get_bus_descriptor()->bus_property_get_name_fn(handle, property);
+    raw_data_t p_data;
+    bus_error_t status = bus_error_success;
+    char temp_str[45] = {0};
+    unsigned int idx = 0;
+    int ret;
+    unsigned int num_of_radios = getNumberRadios();
+
+    if (!name) {
+        wifi_util_error_print(WIFI_CTRL, "%s:%d property name is not found\r\n", __FUNCTION__,
+            __LINE__);
+        return bus_error_invalid_input;
+    }
+
+    wifi_util_dbg_print(WIFI_CTRL, "%s(): %s\n", __FUNCTION__, name);
+    memset(&p_data, 0, sizeof(raw_data_t));
+    p_data.data_type = bus_data_type_string;
+    ret = sscanf(name, "Device.WiFi.AccessPoint.%d.Security.ConnectedRadiusEndpoint", &idx);
+    if (ret == 1 && idx > 0 && idx <= num_of_radios * MAX_NUM_VAP_PER_RADIO) {
+        wifi_front_haul_bss_t *vap_bss =  Get_wifi_object_bss_parameter(idx - 1);
+        if(vap_bss->enabled && (isVapHotspotSecure5g(idx - 1) || isVapHotspotSecure6g(idx - 1) || isVapHotspotOpen5g(idx - 1) || isVapHotspotOpen6g(idx - 1))){
+#ifndef WIFI_HAL_VERSION_3_PHASE2
+            copy_string(temp_str,(char*)vap_bss->security.u.radius.connectedendpoint);
+#else
+            getIpStringFromAdrress(temp_str,&vap_bss->security.u.radius.connectedendpoint);
+#endif
+        }
+        else
+        {
+            uint32_t str_len;
+            str_len = strlen("0.0.0.0") + 1;
+            strncpy(temp_str, "0.0.0.0", str_len);
+        }
+    }
+    p_data.raw_data.bytes = (void*)temp_str;
+    p_data.raw_data_len = sizeof(temp_str);
+    status = get_bus_descriptor()->bus_property_data_set_fn(handle, property, options, &p_data);
+    wifi_util_dbg_print(WIFI_CTRL, "%s(): exit\n", __FUNCTION__);
+    return status;
+}
+
 bus_error_t ap_table_addrowhandler(bus_handle_t *handle, char const *tableName,
     char const *aliasName, uint32_t *instNum)
 {
@@ -2455,6 +2499,16 @@ bus_error_t ap_table_addrowhandler(bus_handle_t *handle, char const *tableName,
         sprintf(event->name, "Device.WiFi.AccessPoint.%d.X_RDK_DiagData", *instNum);
         event->idx = vap_index;
         event->type = wifi_event_monitor_diagnostics;
+        event->subscribed = FALSE;
+        event->num_subscribers = 0;
+        queue_push(ctrl->events_bus_data.events_bus_queue, event);
+    }
+
+    event = (event_bus_element_t *)malloc(sizeof(event_bus_element_t));
+    if (event != NULL) {
+        sprintf(event->name, "Device.WiFi.AccessPoint.%d.Security.ConnectedRadiusEndpoint", *instNum);
+        event->idx = vap_index;
+        event->type =  wifi_event_radius_fallback_and_failover;
         event->subscribed = FALSE;
         event->num_subscribers = 0;
         queue_push(ctrl->events_bus_data.events_bus_queue, event);
@@ -3006,6 +3060,8 @@ void bus_register_handlers(wifi_ctrl_t *ctrl)
                                     { NULL, NULL, NULL, NULL, eventSubHandler, NULL}, slow_speed, ZERO_TABLE },
                                 { WIFI_ACCESSPOINT_DEV_DEAUTH,bus_element_type_event,
                                     { NULL, NULL, NULL, NULL, eventSubHandler, NULL}, slow_speed, ZERO_TABLE },
+                                { WIFI_ACCESSPOINT_RADIUS_CONNECTED_ENDPOINT, bus_element_type_method,
+                                    { ap_get_radius_connected_endpoint, NULL, NULL, NULL, NULL, NULL}, slow_speed, ZERO_TABLE },
                                 { WIFI_ACCESSPOINT_DIAGDATA, bus_element_type_event,
                                     { ap_get_handler, NULL, NULL, NULL, eventSubHandler, NULL}, slow_speed, ZERO_TABLE },
                                 { WIFI_ACCESSPOINT_FORCE_APPLY, bus_element_type_method,
