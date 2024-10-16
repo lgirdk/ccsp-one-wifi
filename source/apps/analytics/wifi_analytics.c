@@ -26,9 +26,7 @@
 #include "wifi_mgr.h"
 #include "wifi_util.h"
 #include "wifi_levl.h"
-#if DML_SUPPORT
 #include "wifi_apps_mgr.h"
-#endif
 #include "wifi_analytics.h"
 #include "wifi_hal_rdk_framework.h"
 #include "wifi_monitor.h"

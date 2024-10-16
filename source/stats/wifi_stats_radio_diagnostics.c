@@ -28,7 +28,7 @@
 #include "wifi_monitor.h"
 #include "wifi_ctrl.h"
 #include "wifi_util.h"
-
+#include "misc.h"
 
 int validate_radio_diagnostic_args(wifi_mon_stats_args_t *args)
 {
@@ -136,8 +136,7 @@ int execute_radio_diagnostic_stats_api(wifi_mon_collector_element_t *c_elem, wif
     memset(radioTrafficStats, 0, sizeof(wifi_radioTrafficStats2_t));
 
     if (radioOperation->enable == true) {
-#if DML_SUPPORT
-        ret = wifi_getRadioTrafficStats2(args->radio_index, radioTrafficStats);
+        ret = get_misc_descriptor()->wifi_getRadioTrafficStats2_fn(args->radio_index, radioTrafficStats);
         if (ret != RETURN_OK) {
             wifi_util_error_print(WIFI_MON, "%s : %d  Failed to get radio traffic statistics for index %d\n",__func__,__LINE__, args->radio_index);
             if (radioTrafficStats != NULL) {
@@ -146,7 +145,6 @@ int execute_radio_diagnostic_stats_api(wifi_mon_collector_element_t *c_elem, wif
             }
             return RETURN_ERR;
         }
-#endif
     } else {
         memset(radioTrafficStats, 0, sizeof(wifi_radioTrafficStats2_t));
     }

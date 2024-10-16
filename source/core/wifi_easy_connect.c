@@ -16,10 +16,6 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 **************************************************************************/
-#include "cosa_apis.h"
-#include "cosa_dbus_api.h"
-#include "cosa_wifi_apis.h"
-#include "cosa_wifi_internal.h"
 #include "plugin_main_apis.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -791,7 +787,8 @@ PCOSA_DML_WIFI_DPP_STA_CFG find_dpp_sta_dml_wifi_ap(unsigned int ap_index, mac_a
 #endif//ONE_WIFI TBD
 }
 
-int init_easy_connect (PCOSA_DATAMODEL_WIFI pWifiDataModel)
+//int init_easy_connect (PCOSA_DATAMODEL_WIFI pWifiDataModel)
+int init_easy_connect ()
 {
     int i;
 //    PCOSA_DML_WIFI_DPP_CFG pWifiApDPP;//ONE_WIFI
@@ -823,7 +820,7 @@ int init_easy_connect (PCOSA_DATAMODEL_WIFI pWifiDataModel)
     g_easy_connect.channels_on_ap[1].channels[10] = 161;
     g_easy_connect.channels_on_ap[1].channels[11] = 165;
 #if 0
-    for (i = 0; i < MAX_DPP_VAP; i++) {
+    for (i = 0; i < MAX_NUM_RADIOS; i++) {
         pWifiApDPP = find_dpp_dml_wifi_ap(i);
         if (pWifiApDPP != NULL) {
             wifi_dppCreateReconfigContext(i, pWifiApDPP->Recfg.PrivateReconfigAccessKey, (void*)&g_easy_connect.reconfig[i].reconf_ctx,

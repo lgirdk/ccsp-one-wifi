@@ -18,8 +18,8 @@
 
  ****************************************************************************/
 
-#ifndef _WIFI_WEBCONF_H_
-#define _WIFI_WEBCONF_H_
+#ifndef WIFI_WEBCONF_H
+#define WIFI_WEBCONF_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -157,9 +157,7 @@ typedef enum {
     webconfig_initializer_none,
     webconfig_initializer_onewifi,
     webconfig_initializer_ovsdb,
-#if DML_SUPPORT
     webconfig_initializer_dml,
-#endif
     webconfig_initializer_wifievents,
     webconfig_initializer_cci,
     webconfig_initializer_max

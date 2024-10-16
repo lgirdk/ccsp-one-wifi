@@ -533,7 +533,6 @@ webconfig_error_t translate_private_vap_info_to_em_bss_config(wifi_vap_info_t *v
         wifi_util_error_print(WIFI_WEBCONFIG, "%s:%d failed top convert key mgmt: "
             "security mode 0x%x\n", __func__, __LINE__, vap->u.bss_info.security.mode);
     }
-    strncpy(vap_row->fronthaul_passphrase, vap->u.bss_info.security.u.key.key,strlen(vap->u.bss_info.security.u.key.key));
 
     return webconfig_error_none;
 }

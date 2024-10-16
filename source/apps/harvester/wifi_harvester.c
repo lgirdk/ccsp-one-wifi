@@ -17,8 +17,6 @@
   limitations under the License.
  **************************************************************************/
 #include <telemetry_busmessage_sender.h>
-#include "cosa_wifi_apis.h"
-#include "ccsp_psm_helper.h"
 #include <avro.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,14 +40,10 @@
 #include <limits.h>
 #include <uuid/uuid.h>
 #include "wifi_webconfig.h"
-#include "ansc_status.h"
 #include <sysevent/sysevent.h>
-#include "ccsp_base_api.h"
 #include "wifi_passpoint.h"
-#include "ccsp_trace.h"
 #include "safec_lib_common.h"
-#include "ccsp_WifiLog_wrapper.h"
-#include "platform-logger.h"
+#include <stdint.h>
 
 typedef enum {
     single_client_msmt_type_all,
@@ -174,6 +168,7 @@ void upload_single_client_msmt_data(sta_data_t *sta_info)
     int size;
     sta_data_t  *sta_data;
     single_client_msmt_type_t msmt_type;
+    wifi_mgr_t *wifi_mgr = (wifi_mgr_t *) get_wifimgr_obj();
 
     avro_writer_t writer;
     avro_schema_t inst_msmt_schema = NULL;
@@ -280,7 +275,7 @@ void upload_single_client_msmt_data(sta_data_t *sta_info)
     avro_value_set_fixed(&optional, transaction_id, 16);
     if (CHK_AVRO_ERR) wifi_util_dbg_print(WIFI_HARVESTER, "%s:%d: Avro error: %s\n", __func__, __LINE__, avro_strerror());
     wifi_util_dbg_print(WIFI_HARVESTER, "Report transaction uuid generated is %s\n", trans_id);
-    platform_trace_warning(WIFI_HARVESTER, "Single client report transaction uuid generated is %s\n", trans_id );
+    wifi_mgr->wifi_ccsp.desc.CcspTraceWarningRdkb_fn("WIFI_HARVESTER, Single client report transaction uuid generated is %s\n", trans_id);
 
     //source - string
     avro_value_get_by_name(&adr, "header", &adrField, NULL);
@@ -584,7 +579,7 @@ void upload_single_client_msmt_data(sta_data_t *sta_info)
      if (CHK_AVRO_ERR) wifi_util_dbg_print(WIFI_HARVESTER, "%s:%d: Avro error: %s\n", __func__, __LINE__, avro_strerror());
 
      wifi_util_dbg_print(WIFI_HARVESTER, "Avro packing done\n");
-     CcspTraceInfo(("%s-%d AVRO packing done\n", __FUNCTION__, __LINE__));
+     wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("%s-%d AVRO packing done\n", __FUNCTION__, __LINE__);
 
      char *json;
      if (!avro_value_to_json(&adr, 1, &json))
@@ -599,7 +594,7 @@ void upload_single_client_msmt_data(sta_data_t *sta_info)
      size += MAGIC_NUMBER_SIZE + SCHEMA_ID_LENGTH;
      sendWebpaMsg((char *)(serviceName), (char *)(dest), trans_id, NULL, NULL, (char *)(contentType), buff, size);//ONE_WIFI
      wifi_util_dbg_print(WIFI_HARVESTER, "Creating telemetry record successful\n");
-     CcspTraceInfo(("%s-%d Creation of Telemetry record is successful\n", __FUNCTION__, __LINE__));
+     wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("%s-%d Creation of Telemetry record is successful\n", __FUNCTION__, __LINE__);
 }
 
 void process_instant_msmt_monitor(wifi_provider_response_t *provider_response)
@@ -921,7 +916,6 @@ void webconfig_harvester_apply(wifi_app_t *app, wifi_event_t *event)
     webconfig_data = event->u.webconfig_data;
     wifi_util_dbg_print(WIFI_HARVESTER,"%s:%d Entering \n", __func__, __LINE__);
 
-#if DML_SUPPORT
     mac_address_t sta_mac;
 
     instant_msmt_reporting_period(webconfig_data->u.decoded.harvester.u_inst_client_reporting_period);
@@ -930,7 +924,6 @@ void webconfig_harvester_apply(wifi_app_t *app, wifi_event_t *event)
     instant_msmt_macAddr(webconfig_data->u.decoded.harvester.mac_address);
     harvester_str_to_mac_bytes(webconfig_data->u.decoded.harvester.mac_address,sta_mac);
     monitor_enable_instant_msmt(sta_mac, webconfig_data->u.decoded.harvester.b_inst_client_enabled);
-#endif // DML_SUPPORT
 }
 
 void handle_harvester_webconfig_event(wifi_app_t *app, wifi_event_t *event)

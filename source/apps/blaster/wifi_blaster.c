@@ -17,8 +17,6 @@
   limitations under the License.
  **************************************************************************/
 #include <telemetry_busmessage_sender.h>
-#include "cosa_wifi_apis.h"
-#include "ccsp_psm_helper.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,14 +41,10 @@
 #include <sys/un.h>
 #include <assert.h>
 #include <limits.h>
-#include "ansc_status.h"
 #include <sysevent/sysevent.h>
-#include "ccsp_base_api.h"
 #include "harvester.h"
 #include "wifi_passpoint.h"
-#include "ccsp_trace.h"
 #include "safec_lib_common.h"
-#include "ccsp_WifiLog_wrapper.h"
 #include <sched.h>
 #include "scheduler.h"
 #include "wifi_apps_mgr.h"
@@ -76,6 +70,7 @@
 #include "common/ieee802_11_defs.h"
 #include "const.h"
 #include "pktgen.h"
+#include <stdint.h>
 
 #ifndef  UNREFERENCED_PARAMETER
 #define UNREFERENCED_PARAMETER(_p_)         (void)(_p_)
@@ -272,17 +267,18 @@ static void active_msmt_log_message( blaster_log_level_t level,char *fmt, ...)
 {
     va_list args;
     char msg[1024] = {};
+    wifi_mgr_t *wifi_mgr = (wifi_mgr_t *) get_wifimgr_obj();
 
     va_start(args, fmt);
     vsnprintf(msg, sizeof(msg), fmt, args);
     va_end(args);
 
-switch(level){
+    switch(level){
     case BLASTER_INFO_LOG:
-        CcspTraceInfo((msg));
+        wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn(msg);
         break;
     case BLASTER_DEBUG_LOG:
-        CcspTraceDebug((msg));
+        wifi_mgr->wifi_ccsp.desc.CcspTraceDebugRdkb_fn(msg);
         break;
     default:
         break;

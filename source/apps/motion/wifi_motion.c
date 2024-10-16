@@ -27,9 +27,7 @@
 #include "wifi_stubs.h"
 #include "wifi_util.h"
 #include "wifi_motion.h"
-#if DML_SUPPORT
 #include "wifi_analytics.h"
-#endif
 #include <telemetry_busmessage_sender.h>
 #include <fcntl.h>
 #include <errno.h>

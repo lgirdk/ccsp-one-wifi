@@ -28,6 +28,8 @@
 #define MAX_RADIOS  2
 #endif
 
+#define  ANSC_STATUS_SUCCESS                        0
+
 typedef struct {
     unsigned int        rapid_reconnect_threshold;
     wifi_vapstatus_t    ap_status;

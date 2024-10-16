@@ -27,6 +27,27 @@
 #include "wifi_util.h"
 #include "wifi_apps_mgr.h"
 
+#ifdef ONEWIFI_ANALYTICS_APP_SUPPORT
+extern int analytics_init(wifi_app_t *app, unsigned int create_flag);
+extern int analytics_deinit(wifi_app_t *app);
+extern int analytics_event(wifi_app_t *app, wifi_event_t *event);
+#else
+int analytics_init(wifi_app_t *app, unsigned int create_flag)
+{
+    return 0;
+}
+
+int analytics_deinit(wifi_app_t *app)
+{
+    return 0;
+}
+
+int analytics_event(wifi_app_t *app, wifi_event_t *event)
+{
+    return 0;
+}
+#endif
+
 #ifdef ONEWIFI_CSI_APP_SUPPORT
 extern int csi_init(wifi_app_t *app, unsigned int create_flag);
 #else
@@ -173,7 +194,7 @@ int blaster_event(wifi_app_t *app, wifi_event_t *event)
 
 
 wifi_app_descriptor_t app_desc[] = {
-#ifdef DML_SUPPORT
+#ifdef ONEWIFI_ANALYTICS_APP_SUPPORT
     {
         wifi_app_inst_analytics, 0,
         wifi_event_type_exec | wifi_event_type_webconfig | wifi_event_type_hal_ind | wifi_event_type_command | wifi_event_type_monitor | wifi_event_type_net | wifi_event_type_wifiapi,

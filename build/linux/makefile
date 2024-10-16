@@ -29,6 +29,9 @@
 
 include makefile.inc
 
+
+EASY_MESH_NODE = 1
+
 # wifi hal rules
 HAL_LIBRARY = $(INSTALLDIR)/lib/libwifihal.a
 WEBCONFIG_LIBRARY = $(INSTALLDIR)/lib/libwebconfig.a
@@ -200,9 +203,11 @@ INCLUDEDIRS = \
     -I$(ONE_WIFI_HOME)/source/sampleapps \
     -I$(ONE_WIFI_HOME)/source/dml/tr_181/ml \
     -I$(ONE_WIFI_HOME)/source/dml/wifi_ssp \
+    -I$(ONE_WIFI_HOME)/source/ccsp \
     -I$(ONE_WIFI_HOME)/source/utils \
     -I$(ONE_WIFI_HOME)/source/stats \
     -I$(ONE_WIFI_HOME)/source/stubs \
+    -I$(ONE_WIFI_HOME)/source/dml/linux \
     -I$(ONE_WIFI_HOME)/source/platform/linux \
     -I$(ONE_WIFI_HOME)/source/platform/common \
     -I$(ONE_WIFI_HOME)/lib/pktgen/ \
@@ -269,7 +274,7 @@ LIBS = -lm -luuid -lwifihal  -lpthread -ldl -ljansson -lev -lssl -lcrypto -lnl-3
 # directory information to be passed to the linker.
 #
 
-CSOURCES = $(wildcard $(ONE_WIFI_HOME)/source/db/*.c) \
+CSOURCES = $(wildcard $(ONE_WIFI_HOME)/source/db/wifi_db.c) \
     $(filter-out $(ONE_WIFI_HOME)/source/core/services/vap_svc_mesh_pod.c,$(wildcard $(ONE_WIFI_HOME)/source/core/services/*.c)) \
     $(wildcard $(ONE_WIFI_HOME)/source/apps/*.c) \
     $(wildcard $(ONE_WIFI_HOME)/source/stubs/*.c) \
@@ -284,8 +289,11 @@ CSOURCES = $(wildcard $(ONE_WIFI_HOME)/source/db/*.c) \
     $(ONE_WIFI_HOME)/source/core/wifi_multidoc_webconfig.c	\
     $(ONE_WIFI_HOME)/source/core/wifi_mgr.c	\
     $(ONE_WIFI_HOME)/source/core/wifi_events.c	\
+    $(ONE_WIFI_HOME)/source/ccsp/ccsp.c \
     $(ONE_WIFI_HOME)/source/utils/collection.c	\
     $(ONE_WIFI_HOME)/source/utils/scheduler.c	\
+    $(ONE_WIFI_HOME)/source/dml/linux/wifi_dml.c \
+    $(ONE_WIFI_HOME)/source/platform/linux/misc.c 	\
     $(ONE_WIFI_HOME)/source/platform/linux/bus.c	\
     $(ONE_WIFI_HOME)/source/platform/common/common.c   \
 
@@ -312,6 +320,11 @@ WEBCONFIG_SOURCES = $(ONE_WIFI_HOME)/source/webconfig/wifi_decoder.c	\
         $(ONE_WIFI_HOME)/source/webconfig/wifi_webconfig_wifiapi_vap.c		\
         $(ONE_WIFI_HOME)/source/webconfig/wifi_webconfig_wifi_config.c		\
         $(ONE_WIFI_HOME)/source/webconfig/wifi_webconfig_xfinity.c		\
+        $(ONE_WIFI_HOME)/source/webconfig/wifi_webconfig_radio_stats.c		\
+        $(ONE_WIFI_HOME)/source/webconfig/wifi_webconfig_neighbor_stats.c	\
+        $(ONE_WIFI_HOME)/source/webconfig/wifi_webconfig_assocdevice_stats.c	\
+        $(ONE_WIFI_HOME)/source/webconfig/wifi_webconfig_radio_temperature.c    \
+        $(ONE_WIFI_HOME)/source/webconfig/wifi_webconfig_radiodiag_stats.c    \
         $(ONE_WIFI_HOME)/source/utils/wifi_util.c	\
 
 HEBUS_SOURCES = $(wildcard $(ONE_WIFI_HOME)/source/platform/linux/he_bus/src/*.c)  \

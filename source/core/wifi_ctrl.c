@@ -19,11 +19,6 @@
 
 #include <stdio.h>
 #include <stdbool.h>
-#if DML_SUPPORT
-#include "ansc_platform.h"
-#else
-#include <sys/types.h>
-#endif // DML_SUPPORT
 #include "wifi_stubs.h"
 #include "wifi_hal.h"
 #include "wifi_hal_rdk_framework.h"
@@ -35,6 +30,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include "ieee80211.h"
+#include "misc.h"
 #ifdef CMWIFI_RDKB
 #define FILE_SYSTEM_UPTIME         "/var/systemUptime.txt"
 #else
@@ -50,12 +46,10 @@ void get_action_frame_evt_params(uint8_t *frame, uint32_t len, frame_data_t *mgm
 
 static void ctrl_queue_timeout_scheduler_tasks(wifi_ctrl_t *ctrl);
 static int pending_states_webconfig_analyzer(void *arg);
-#if DML_SUPPORT
 static int bus_check_and_subscribe_events(void* arg);
 static int sta_connectivity_selfheal(void* arg);
 static int run_greylist_event(void *arg);
 static int run_analytics_event(void* arg);
-#endif //DML_SUPPORT
 
 static int switch_dfs_channel(void *arg);
 int dfs_channel;
@@ -388,12 +382,10 @@ int init_wifi_global_config(void)
         wifi_util_info_print(WIFI_CTRL, "%s:%d wifi global params already initialized\r\n",__func__, __LINE__);
         return RETURN_OK;
     }
-#if DML_SUPPORT
-    if (RETURN_OK != WiFi_InitGasConfig()) {
+    if (RETURN_OK != get_misc_descriptor()->WiFi_InitGasConfig_fn()) {
         wifi_util_error_print(WIFI_CTRL,"RDK_LOG_WARN, RDKB_SYSTEM_BOOT_UP_LOG : CosaWifiInitialize - WiFi failed to Initialize GAS Configuration.\n");
         return RETURN_ERR;
     }
-#endif
 
     wifi_global_param_init = true;
     return RETURN_OK;
@@ -529,7 +521,6 @@ bool is_acs_channel_updated(unsigned int num_radios)
     return true;
 }
 
-#if DML_SUPPORT
 bool check_for_greylisted_mac_filter(void)
 {
     acl_entry_t *acl_entry = NULL;
@@ -564,7 +555,6 @@ bool check_for_greylisted_mac_filter(void)
     }
     return false;
 }
-#endif // DML_SUPPORT
 
 void bus_get_vap_init_parameter(const char *name, unsigned int *ret_val)
 {
@@ -804,7 +794,6 @@ int start_wifi_services(void)
     return RETURN_OK;
 }
 
-#if DML_SUPPORT
 bool get_notify_wifi_from_psm(char *PsmParamName)
 {
     int rc = 0;
@@ -850,8 +839,6 @@ void set_notify_wifi_to_psm(char *PsmParamName, char *pInValue)
     wifi_util_dbg_print(WIFI_CTRL, "set_notify_wifi_to_psm ends: %d\n", rc);
 }
 
-#endif // DML_SUPPORT
-
 int captive_portal_check(void)
 {
 #ifdef WIFI_CAPTIVE_PORTAL
@@ -867,11 +854,9 @@ int captive_portal_check(void)
     raw_data_t data;
     memset(&data, 0, sizeof(raw_data_t));
 
-#if DML_SUPPORT
     bool psm_notify_flag = false;
     char pInValue[32] = "";
     char *PsmParamName = "eRT.com.cisco.spvtg.ccsp.Device.WiFi.NotifyWiFiChanges";
-#endif //// DML_SUPPORT
 
     // Get CONFIG_WIFI
     rc = get_bus_descriptor()->bus_data_get_fn(&g_wifi_mgr->ctrl.handle, CONFIG_WIFI, &data);
@@ -921,7 +906,6 @@ int captive_portal_check(void)
     }
     wifi_util_dbg_print(WIFI_CTRL, "Private vaps credentials= %d\n", default_private_credentials);
 
-#if DML_SUPPORT
     // Get PSM value of eRT.com.cisco.spvtg.ccsp.Device.WiFi.NotifyWiFiChanges
     psm_notify_flag = get_notify_wifi_from_psm(PsmParamName);
 
@@ -935,7 +919,6 @@ int captive_portal_check(void)
         // set PSM value of eRT.com.cisco.spvtg.ccsp.Device.WiFi.NotifyWiFiChanges
         set_notify_wifi_to_psm(PsmParamName, pInValue);
     }
-#endif // DML_SUPPORT
 
     wifi_util_dbg_print(WIFI_CTRL, "CONFIG_WIFI= %d fun %s  and wifi_value %d \n", get_config_wifi,
         __func__, default_private_credentials);
@@ -1288,10 +1271,8 @@ int init_wifi_ctrl(wifi_ctrl_t *ctrl)
     //Register to BUS for webconfig interactions
     bus_register_handlers(ctrl);
 
-#if DML_SUPPORT
     // subscribe for BUS events
     bus_subscribe_events(ctrl);
-#endif
 
     //Register wifi hal sta connect/disconnect callback
     wifi_hal_staConnectionStatus_callback_register(sta_connection_status);
@@ -1308,7 +1289,9 @@ int init_wifi_ctrl(wifi_ctrl_t *ctrl)
     ctrl->bus_events_subscribed = false;
     ctrl->tunnel_events_subscribed = false;
 
+#if defined (FEATURE_SUPPORT_WEBCONFIG)
     register_with_webconfig_framework();
+#endif
 
     return RETURN_OK;
 }
@@ -1659,8 +1642,10 @@ int start_wifi_ctrl(wifi_ctrl_t *ctrl)
         wifi_util_error_print(WIFI_CTRL,"%s:%d Failed to start Wifi Monitor\n", __func__, __LINE__);
     }
 
+#ifdef ONEWIFI_ANALYTICS_APP_SUPPORT
     apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_exec, wifi_event_exec_start, NULL);
- 
+#endif
+
 #ifdef ONEWIFI_CAC_APP_SUPPORT
     apps_mgr_cac_event(&ctrl->apps_mgr, wifi_event_type_exec, wifi_event_exec_start, NULL, 0);
 #endif
@@ -1671,7 +1656,10 @@ int start_wifi_ctrl(wifi_ctrl_t *ctrl)
     ctrl->ctrl_initialized = true;
     ctrl_queue_loop(ctrl);
 
+#ifdef ONEWIFI_ANALYTICS_APP_SUPPORT
     apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_exec, wifi_event_exec_stop, NULL);
+#endif
+
 #ifdef ONEWIFI_CAC_APP_SUPPORT
     apps_mgr_cac_event(&ctrl->apps_mgr, wifi_event_type_exec, wifi_event_exec_stop, NULL, 0);
 #endif
@@ -1971,7 +1959,6 @@ static int sta_connectivity_selfheal(void* arg)
     return TIMER_TASK_COMPLETE;
 }
 
-#if DML_SUPPORT
 static int run_greylist_event(void *arg)
 {
     bool greylist_flag = false;
@@ -1983,7 +1970,6 @@ static int run_greylist_event(void *arg)
     }
     return TIMER_TASK_COMPLETE;
 }
-#endif
 static int run_analytics_event(void* arg)
 {
     wifi_ctrl_t *ctrl = NULL;
@@ -2020,14 +2006,15 @@ static int pending_states_webconfig_analyzer(void *arg)
 
 static void ctrl_queue_timeout_scheduler_tasks(wifi_ctrl_t *ctrl)
 {
+
+#ifdef ONEWIFI_ANALYTICS_APP_SUPPORT
     scheduler_add_timer_task(ctrl->sched, FALSE, NULL, run_analytics_event, NULL, (ANAYLYTICS_PERIOD * 1000), 0, FALSE);
+#endif
 
 #ifdef ONEWIFI_CAC_APP_SUPPORT
     scheduler_add_timer_task(ctrl->sched, FALSE, NULL, run_cac_event, NULL, (CAC_PERIOD * 1000), 0, FALSE);
 #endif
-#ifdef DML_SUPPORT
     scheduler_add_timer_task(ctrl->sched, FALSE, NULL, run_greylist_event, NULL, (GREYLIST_CHECK_IN_SECONDS * 1000), 0, FALSE);
-#endif
     scheduler_add_timer_task(ctrl->sched, FALSE, NULL, sta_connectivity_selfheal, NULL, (STA_CONN_RETRY_TIMEOUT * 1000), 0, FALSE);
 
     scheduler_add_timer_task(ctrl->sched, FALSE, NULL, bus_check_and_subscribe_events, NULL, (ctrl->poll_period * 1000), 0, FALSE);
@@ -2408,7 +2395,6 @@ int  get_wifi_rfc_parameters(char *str, void *value)
         return RETURN_ERR;
     }
 
-#if DML_SUPPORT
     wifi_mgr_t *l_wifi_mgr = get_wifimgr_obj();
     wifi_util_dbg_print(WIFI_CTRL, "%s get wifi rfc parameter %s\n", __FUNCTION__, str);
     if ((strcmp(str, RFC_WIFI_PASSPOINT) == 0)) {
@@ -2421,20 +2407,10 @@ int  get_wifi_rfc_parameters(char *str, void *value)
         wifi_util_dbg_print(WIFI_CTRL, "%s get wifi rfc parameter not found %s\n", __FUNCTION__, str);
         ret = RETURN_ERR;
     }
-#else
-    if (strncmp(str, RFC_WIFI_PASSPOINT, strlen(RFC_WIFI_PASSPOINT)) == 0) {
-        *(bool*)value = false;
-    } else if (strncmp(str, RFC_WIFI_INTERWORKING, strlen(RFC_WIFI_INTERWORKING)) == 0) {
-        *(bool*)value = false;
-    } else {
-        ret = RETURN_ERR;
-    }
-#endif
 
     return ret;
 }
 
-#if DML_SUPPORT
 wifi_dml_parameters_t* get_wifi_dml_parameters(void)
 {
     wifi_mgr_t *p_wifi_db_data = get_wifimgr_obj();
@@ -2646,19 +2622,6 @@ int set_vap_dml_parameters(char *str, void *value)
     }
     return ret;
 }
-
-int set_dml_init_status(bool status)
-{
-    int ret = RETURN_OK;
-    wifi_mgr_t *wifi_mgr = get_wifimgr_obj();
-    wifi_util_info_print(WIFI_MGR, "%s Marking DML Init Complete. Start Wifi Ctrl\n", __FUNCTION__);
-    pthread_mutex_lock(&wifi_mgr->lock);
-    wifi_mgr->dml_init_status.condition = true;
-    pthread_cond_signal(&wifi_mgr->dml_init_status.cv);
-    pthread_mutex_unlock(&wifi_mgr->lock);
-    return ret;
-}
-#endif // DML_SUPPORT
 
 rdk_wifi_radio_t* find_radio_config_by_index(uint8_t index)
 {

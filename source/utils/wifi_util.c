@@ -1081,7 +1081,6 @@ int convert_ifname_to_radio_index(wifi_platform_property_t *wifi_prop, char *if_
         return RETURN_ERR;
     }
 
-#if DML_SUPPORT
     wifi_interface_name_idex_map_t *prop;
     
     prop = GET_IFNAME_PROPERTY(wifi_prop, if_name);
@@ -1091,19 +1090,6 @@ int convert_ifname_to_radio_index(wifi_platform_property_t *wifi_prop, char *if_
         wifi_util_dbg_print(WIFI_WEBCONFIG,"%s:%d - No interface %s found\n", __FUNCTION__, __LINE__, if_name);
     }
     return (prop) ? RETURN_OK : RETURN_ERR;
-#else
-    wifi_util_dbg_print(WIFI_WEBCONFIG,"WIFI %s:%d Getting radio_idx for %s \n",__FUNCTION__, __LINE__,if_name);
-    if (strcmp(if_name,"wifi0") == 0)
-        *radio_index = 0;
-    else if (strcmp(if_name,"wifi1") == 0)
-        *radio_index = 1;
-    else if (strcmp(if_name,"wifi2") == 0)
-        *radio_index = 2;
-    else
-        return RETURN_ERR;
-
-    return RETURN_OK;
-#endif
 }
 
 int convert_radio_index_to_ifname(wifi_platform_property_t *wifi_prop, unsigned int radio_index, char *if_name, int ifname_len)
@@ -3606,12 +3592,6 @@ bool is_vap_param_config_changed(wifi_vap_info_t *vap_info_old, wifi_vap_info_t 
         return true;
     }
 
-#ifndef CCSP_COMMON
-    if ((rdk_old->exists | rdk_new->exists) == false) {
-        return false;
-    }
-#endif // CCSP_COMMON
-
     if (IS_CHANGED(vap_info_old->vap_index, vap_info_new->vap_index) ||
         IS_STR_CHANGED(vap_info_old->vap_name, vap_info_new->vap_name, sizeof(wifi_vap_name_t)) ||
         IS_CHANGED(vap_info_old->radio_index, vap_info_new->radio_index) ||
@@ -3631,18 +3611,6 @@ bool is_vap_param_config_changed(wifi_vap_info_t *vap_info_old, wifi_vap_info_t 
                 sizeof(wifi_vap_security_t))) {
             return true;
         }
-#ifndef CCSP_COMMON
-        char old_bssid_str[32], new_bssid_str[32];
-
-        if (memcmp(vap_info_old->u.sta_info.bssid, vap_info_new->u.sta_info.bssid,
-                sizeof(bssid_t)) != 0) {
-            uint8_mac_to_string_mac(vap_info_old->u.sta_info.bssid, old_bssid_str);
-            uint8_mac_to_string_mac(vap_info_new->u.sta_info.bssid, new_bssid_str);
-            wifi_util_info_print(WIFI_CTRL, "%s:%d: mesh sta bssid changed [%s] -> [%s]\n",
-                __func__, __LINE__, old_bssid_str, new_bssid_str);
-            return true;
-        }
-#endif
     } else {
         // Ignore bssid change to avoid reconfiguration and disconnection
         if (IS_STR_CHANGED(vap_info_old->u.bss_info.ssid, vap_info_new->u.bss_info.ssid,

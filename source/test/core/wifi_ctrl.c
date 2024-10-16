@@ -19,7 +19,8 @@
 
 #include <stdio.h>
 #include <stdbool.h>
-#include "ansc_platform.h"
+#include <string.h>
+#include <unistd.h>
 #include "wifi_hal.h"
 #include "wifi_ctrl.h"
 #include "wifi_hal_sta.h"

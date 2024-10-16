@@ -19,11 +19,23 @@
 
 #include "platform_common.h"
 #include "bus.h"
+#include "wifi_dml.h"
+#include "misc.h"
+#include "ccsp.h"
 
 int platform_init(bus_handle_t *handle)
 {
     /* Initialize RBUS descriptor */
     bus_init(handle);
+
+    /* Initialize ccsp trace and log methods */
+    wifi_ccsp_rdkb_init(get_wificcsp_obj());
+
+    /* Initialize Data Model descriptor */
+    wifi_dml_init(get_wifidml_obj());
+
+    /* Initialize misc data and descriptor */
+    wifi_misc_init(get_wifimisc_obj());
 
     /* t2_events_, v_secure_system etc init */
     // system_init();

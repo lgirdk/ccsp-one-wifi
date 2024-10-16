@@ -1074,9 +1074,7 @@ static int process_ext_webconfig_set_data_sta_bssid(vap_svc_t *svc, void *arg)
         candidate->external_ap.ssid, channel, candidate->external_ap.freq,
         candidate->radio_freq_band, ext_conn_state_to_str(ext->conn_state));
 
-#if DML_SUPPORT
         apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_command, wifi_event_type_new_bssid, ext);
-#endif
 
     if (ext->conn_state == connection_state_connected_wait_for_csa &&
         ext->ext_csa_wait_timeout_handler_id != 0) {
@@ -1218,9 +1216,7 @@ static void process_ext_trigger_disconnection(vap_svc_t *svc, void *arg)
         return;
     }
 
-#if DML_SUPPORT
     apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_command, wifi_event_type_trigger_disconnection_analytics, ext);
-#endif
 
     radio_index = get_radio_index_for_vap_index(svc->prop, ext->connected_vap_index);
     if (radio_index == RETURN_ERR) {

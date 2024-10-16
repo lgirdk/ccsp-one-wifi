@@ -37,13 +37,6 @@
 #include <sys/un.h>
 #include <assert.h>
 #include <uuid/uuid.h>
-
-#if DML_SUPPORT
-#include <sysevent/sysevent.h>
-#include "ansc_status.h"
-#include "ccsp_base_api.h"
-#endif
-
 #include "harvester.h"
 #include "wifi_stubs.h"
 
@@ -129,9 +122,7 @@ void upload_associated_devices_msmt_data(bssid_data_t *bssid_info, sta_data_t *s
     wifi_util_dbg_print(WIFI_MON, "%s:%d: Measurement Type: %d\n", __func__, __LINE__, msmt_type);
 
     monitor = get_wifi_monitor();
-#if DML_SUPPORT
     radio_idx = getRadioIndexFromAp(monitor->inst_msmt.ap_index);
-#endif
     /* open schema file */
     fp = fopen (INTERFACE_DEVICES_WIFI_AVRO_FILENAME , "rb");
     if (fp == NULL) {
@@ -612,11 +603,9 @@ void stream_device_msmt_data()
     unsigned int vap_array_index;
 
     monitor = get_wifi_monitor();
-#if DML_SUPPORT
     getVAPArrayIndexFromVAPIndex((unsigned int)monitor->inst_msmt.ap_index, &vap_array_index);
     sta_map = monitor->bssid_data[vap_array_index].sta_map;
     to_sta_key(monitor->inst_msmt.sta_mac, key);
-#endif
     wifi_util_dbg_print(WIFI_MON, "%s:%d\n", __func__, __LINE__);
     str_tolower(key);
     data = (sta_data_t *)hash_map_get(sta_map, key);    

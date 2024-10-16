@@ -155,13 +155,11 @@ int vap_svc_public_update(vap_svc_t *svc, unsigned int radio_index, wifi_vap_inf
     memset((unsigned char *)p_tgt_created_vap_map, 0, sizeof(wifi_vap_info_map_t));
     p_tgt_created_vap_map->num_vaps = 0;
     wifi_mgr_t *g_wifi_mgr = (wifi_mgr_t *)get_wifimgr_obj();
-#if DML_SUPPORT
     wifi_rfc_dml_parameters_t *rfc_info = (wifi_rfc_dml_parameters_t *)get_wifi_db_rfc_parameters();
     if (rfc_info) {
         greylist_rfc = rfc_info->radiusgreylist_rfc;
         rfc_passpoint_enable = rfc_info->wifipasspoint_rfc;
     }
-#endif // DML_SUPPORT
     wifi_global_param_t *pcfg = (wifi_global_param_t *) get_wifidb_wifi_global_param();
     for (i = 0; i < map->num_vaps; i++) {
         // Create xfinity secure vaps only if passpoint is enabled and update db and caches - just the way
@@ -348,7 +346,6 @@ void process_prefer_private_rfc_event(vap_svc_event_t event, void *data)
 
 void process_xfinity_enable(vap_svc_event_t event, void *data)
 {
-#if DML_SUPPORT
     public_vaps_data_t *public = ((public_vaps_data_t *)data);
     wifi_util_dbg_print(WIFI_CTRL,"WIFI Enter RFC Func %s: %d : vap_name:%s:bool %d\n",__FUNCTION__,__LINE__,public->vap_name,public->enabled);
     wifi_rfc_dml_parameters_t *rfc_param = (wifi_rfc_dml_parameters_t *) get_wifi_db_rfc_parameters();
@@ -366,7 +363,6 @@ void process_xfinity_enable(vap_svc_event_t event, void *data)
         rfc_param->hotspot_secure_6g_last_enabled = public->enabled;
 
     get_wifidb_obj()->desc.update_rfc_config_fn(0, rfc_param);
-#endif
 }
 
 void process_xfinity_rrm(vap_svc_event_t event)

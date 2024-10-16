@@ -19,11 +19,7 @@
  ****************************************************************************/
 
 #include "wifi_data_plane.h"
-#if DML_SUPPORT
 #include "wifi_monitor.h"
-#else
-#include "log.h"
-#endif // DML_SUPPORT
 #include "wifi_util.h"
 
 wifi_data_plane_t g_data_plane_module;

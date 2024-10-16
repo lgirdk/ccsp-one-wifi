@@ -29,7 +29,6 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/time.h>
-#include "cosa_apis.h"
 #include "wifi_hal.h"
 #include "collection.h"
 #include "wifi_monitor.h"
@@ -41,13 +40,8 @@
 #ifdef MQTTCM
 #include <mqttcm_lib/mqttcm_conn.h>
 #endif
-#include "ansc_status.h"
 #include <sysevent/sysevent.h>
-#include "ccsp_base_api.h"
 #include "harvester.h"
-#include "ccsp_WifiLog_wrapper.h"
-#include "ccsp_trace.h"
-#include "platform-logger.h"
 #include "ext_blaster.pb-c.h"
 #include "qm_conn.h"
 #include "wifi_util.h"
@@ -55,6 +49,8 @@
 #include "wifi_stubs.h"
 #include "wifi_blaster.h"
 #include "const.h"
+#include <stdint.h>
+
 #define PROTOBUF_MAC_SIZE 13
 
 
@@ -128,24 +124,25 @@ extern bool             mqttcm_enabled;
 static void printBlastMetricData(single_client_msmt_type_t msmtType, wifi_actvie_msmt_t *blaster_stats,
                                 blaster_hashmap_t *staData, bool activeClient, const char *callerFunc)
 {
+    wifi_mgr_t *wifi_mgr = (wifi_mgr_t *) get_wifimgr_obj();
     int RadioCount = 0, radioIdx = 0, sampleCount = 0;
     int Count = GetActiveMsmtNumberOfSamples();
     unsigned char PlanId[PLAN_ID_LENGTH] = {0};
     static char *radio_arr[3] = {"radio_2_4G", "radio_5G", "radio_6G"};
     char freqBand[MAX_STR_LEN] = {0}, chanBw[MAX_STR_LEN] = {0};
 
-    CcspTraceDebug(("debug called from %s\n", callerFunc));
+    wifi_mgr->wifi_ccsp.desc.CcspTraceDebugRdkb_fn("debug called from %s\n", callerFunc);
 
     if (blaster_stats == NULL || staData == NULL)
     {
-        CcspTraceError(("%s:%d: Debug function failed as NULL data received\n", __FUNCTION__, __LINE__));
+        wifi_mgr->wifi_ccsp.desc.CcspTraceErrorRdkb_fn("%s:%d: Debug function failed as NULL data received\n", __FUNCTION__, __LINE__);
         return;
     }
 
     /* ID */
     to_plan_char(blaster_stats->active_msmt.PlanId, PlanId);
-    CcspTraceInfo(("\n\tplanID:\t[%s]\n \tstepID:\t[%d]\n",
-                PlanId, blaster_stats->curStepData.StepId));
+    wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("\n\tplanID:\t[%s]\n \tstepID:\t[%d]\n",
+                PlanId, blaster_stats->curStepData.StepId);
 
     if (activeClient)
     {
@@ -165,14 +162,14 @@ static void printBlastMetricData(single_client_msmt_type_t msmtType, wifi_actvie
         /* Radio Data */
         for(RadioCount = 0; RadioCount < (int)getNumberRadios(); RadioCount++)
         {
-            CcspTraceInfo(("===== RADIO METRICS ====\n"));
-            CcspTraceInfo(("{\n\t radioId: %s,\n\t NoiseFloor: %d,\n\t ChanUtil: %d,\n\t "
+            wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("===== RADIO METRICS ====\n");
+            wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("{\n\t radioId: %s,\n\t NoiseFloor: %d,\n\t ChanUtil: %d,\n\t "
                                 "activityFactor: %d,\n\t careerSenseThresholdExceed: %d,\n\t channelsInUse: %s\n}\n",
                                 radio_arr[RadioCount], radio_stats[RadioCount]->NoiseFloor,
                                 radio_stats[RadioCount]->channelUtil,
                                 radio_stats[RadioCount]->RadioActivityFactor,
                                 radio_stats[RadioCount]->CarrierSenseThreshold_Exceeded,
-                                radio_stats[RadioCount]->ChannelsInUse));
+                                radio_stats[RadioCount]->ChannelsInUse);
         }
 
         /* Operating Channel metrics */
@@ -208,38 +205,38 @@ static void printBlastMetricData(single_client_msmt_type_t msmtType, wifi_actvie
             {
                 snprintf(freqBand, MAX_STR_LEN, "\"%s\"", "6GHz, set to _6GHz");
             }
-            CcspTraceInfo(("{\n\tOperatingStandard: %s,\n\tOperatingChannel: %d,\n\t"
+            wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("{\n\tOperatingStandard: %s,\n\tOperatingChannel: %d,\n\t"
                                 "OperatingChannelBandwidth: %s,\n\tFreqBand: %s\n}\n",
                                 staData->sta_active_msmt_data[0].Operating_standard,
                                 radio_stats[radioIdx]->primary_radio_channel,
-                                chanBw, freqBand));
+                                chanBw, freqBand);
 
         } else {
-            CcspTraceInfo(("{\n\tOperatingStandard: %s,\n\tOperatingChannel: 0,\n\t"
+            wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("{\n\tOperatingStandard: %s,\n\tOperatingChannel: 0,\n\t"
                                 "OperatingChannelBandwidth: %s,\n\tFreqBand: %s\n}\n",
-                                "Not defined, set to NULL", "set to NULL", "frequency_band set to NULL"));
+                                "Not defined, set to NULL", "set to NULL", "frequency_band set to NULL");
         }
 
         /* Client Blast metrics */
-        CcspTraceInfo(("===== Client [%02x:%02x:%02x:%02x:%02x:%02x] Blast Metrics =====\n",
+        wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("===== Client [%02x:%02x:%02x:%02x:%02x:%02x] Blast Metrics =====\n",
                         staData->sta_mac[0], staData->sta_mac[1],
                         staData->sta_mac[2], staData->sta_mac[3],
-                        staData->sta_mac[4], staData->sta_mac[5]));
+                        staData->sta_mac[4], staData->sta_mac[5]);
 
         /* TX metrics */
-        CcspTraceInfo(("{\n\ttx_retransmissions: %d,\n \tmax_tx_rate: %d\n}\n",
+        wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("{\n\ttx_retransmissions: %d,\n \tmax_tx_rate: %d\n}\n",
                        staData->sta_active_msmt_data[Count-1].ReTransmission - staData->sta_active_msmt_data[0].ReTransmission,
-                       staData->sta_active_msmt_data[0].MaxTxRate));
+                       staData->sta_active_msmt_data[0].MaxTxRate);
 
         for (sampleCount = 0; sampleCount < Count; sampleCount++)
         {
-            CcspTraceInfo(("{\n \t SampleCount: %d\n \t\t{signalStrength: %d,\n"
+            wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("{\n \t SampleCount: %d\n \t\t{signalStrength: %d,\n"
                                 "\t\tSNR: %d,\n \t\ttx_phy_rate: %ld,\n \t\trx_phy_rate: %ld,\n"
                                 "\t\tthroughput: %lf }\n}\n", sampleCount, staData->sta_active_msmt_data[sampleCount].rssi,
                                 staData->sta_active_msmt_data[sampleCount].SNR,
                                 staData->sta_active_msmt_data[sampleCount].TxPhyRate,
                                 staData->sta_active_msmt_data[sampleCount].RxPhyRate,
-                                staData->sta_active_msmt_data[sampleCount].throughput));
+                                staData->sta_active_msmt_data[sampleCount].throughput);
         }
         for (unsigned int radio_index = 0; radio_index < getNumberRadios(); radio_index++) {
             if(radio_stats[radio_index] != NULL){
@@ -267,6 +264,7 @@ void upload_single_client_active_msmt_data(blaster_hashmap_t *sta_info)
     sta_key_t sta_key;
     int Count = GetActiveMsmtNumberOfSamples();
     int radio_idx = 0;
+    wifi_mgr_t *wifi_mgr = (wifi_mgr_t *) get_wifimgr_obj();
 
     blaster_hashmap_t  *sta_data;
     blaster_hashmap_t  *sta_del = NULL;
@@ -318,7 +316,7 @@ void upload_single_client_active_msmt_data(blaster_hashmap_t *sta_info)
     }
 
     wifi_util_dbg_print(WIFI_BLASTER, "%s:%d: Measurement Type: %d\n", __func__, __LINE__, msmt_type);
-    CcspTraceDebug(("%s:%d: Measurement Type: %d\n", __func__, __LINE__, msmt_type));
+    wifi_mgr->wifi_ccsp.desc.CcspTraceDebugRdkb_fn("%s:%d: Measurement Type: %d\n", __func__, __LINE__, msmt_type);
 
     wifi_util_dbg_print(WIFI_BLASTER, "%s:%d: opening the schema file %s\n", __func__, __LINE__, WIFI_SINGLE_CLIENT_BLASTER_AVRO_FILENAME);
     /* open schema file */
@@ -396,7 +394,7 @@ void upload_single_client_active_msmt_data(blaster_hashmap_t *sta_info)
         }
         free(buff);
         wifi_util_dbg_print(WIFI_BLASTER, "%s:%d: Unable to read schema file: %s\n", __func__, __LINE__, WIFI_SINGLE_CLIENT_BLASTER_AVRO_FILENAME);
-        CcspTraceError(("%s:%d: !ERROR! Unable to read schema file: %s\n", __func__, __LINE__, WIFI_SINGLE_CLIENT_BLASTER_AVRO_FILENAME));
+        wifi_mgr->wifi_ccsp.desc.CcspTraceErrorRdkb_fn("%s:%d: !ERROR! Unable to read schema file: %s\n", __func__, __LINE__, WIFI_SINGLE_CLIENT_BLASTER_AVRO_FILENAME);
         for (unsigned int radio_index = 0; radio_index < getNumberRadios(); radio_index++) {
             if(radio_stats[radio_index] != NULL){
                 free(radio_stats[radio_index]);
@@ -521,7 +519,7 @@ void upload_single_client_active_msmt_data(blaster_hashmap_t *sta_info)
     }
 
     wifi_util_dbg_print(WIFI_BLASTER, "Report transaction uuid generated is %s\n", trans_id);
-    platform_trace_warning(WIFI_BLASTER, "Single client report transaction uuid generated is %s\n", trans_id );
+    wifi_mgr->wifi_ccsp.desc.CcspTraceWarningRdkb_fn("WIFI_BLASTER, Single client report transaction uuid generated is %s\n", trans_id);
 
     avro_value_get_by_name(&adr, "header", &adrField, NULL);
 
@@ -559,11 +557,11 @@ void upload_single_client_active_msmt_data(blaster_hashmap_t *sta_info)
         if (macStr != NULL) {
             strncpy( CpemacStr, macStr, sizeof(CpemacStr));
             wifi_util_dbg_print(WIFI_BLASTER, "%s:%d: RDK_LOG_DEBUG, Received DeviceMac from Atom side: %s\n",__func__, __LINE__, macStr);
-            CcspTraceInfo(("%s-%d Received DeviceMac from Atom side: %s\n", __FUNCTION__, __LINE__, macStr));
+            wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("%s-%d Received DeviceMac from Atom side: %s\n", __FUNCTION__, __LINE__, macStr);
         }
         else {
             wifi_util_error_print(WIFI_BLASTER, "%s:%d: RDK_LOG_DEBUG, Device MAC Received as NULL\n", __func__, __LINE__);
-            CcspTraceError(("%s-%d Device MAC Received as NULL\n", __func__, __LINE__));
+            wifi_mgr->wifi_ccsp.desc.CcspTraceErrorRdkb_fn("%s-%d Device MAC Received as NULL\n", __func__, __LINE__);
         }
     }
 
@@ -590,8 +588,8 @@ void upload_single_client_active_msmt_data(blaster_hashmap_t *sta_info)
     if (CHK_AVRO_ERR) wifi_util_dbg_print(WIFI_BLASTER, "%s:%d: Avro error: %s\n", __func__, __LINE__, avro_strerror());
     unsigned char *pMac = (unsigned char*)CpeMacid;
     wifi_util_dbg_print(WIFI_BLASTER, "RDK_LOG_DEBUG, mac_address = 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X\n", pMac[0], pMac[1], pMac[2], pMac[3], pMac[4], pMac[5] );
-    CcspTraceInfo(("CPE MAC address = 0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X\n",
-        pMac[0], pMac[1], pMac[2], pMac[3], pMac[4], pMac[5]));
+    wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("CPE MAC address = 0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X\n",
+        pMac[0], pMac[1], pMac[2], pMac[3], pMac[4], pMac[5]);
 
     //Data Field block
     wifi_util_dbg_print(WIFI_BLASTER, "data field\n");
@@ -1085,7 +1083,7 @@ void upload_single_client_active_msmt_data(blaster_hashmap_t *sta_info)
     }
 
     wifi_util_dbg_print(WIFI_BLASTER, "AVRO packing done\n");
-    CcspTraceInfo(("%s-%d AVRO packing done\n", __FUNCTION__, __LINE__));
+    wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("%s-%d AVRO packing done\n", __FUNCTION__, __LINE__);
 #if 0
     char *json;
     if (!avro_value_to_json(&adr, 1, &json))
@@ -1116,7 +1114,7 @@ void upload_single_client_active_msmt_data(blaster_hashmap_t *sta_info)
     snprintf(telemetry_buf, sizeof(char)*1024, "%s %s",blaster->active_msmt.t_header.traceParent, blaster->active_msmt.t_header.traceState);
     get_stubs_descriptor()->t2_event_s_fn("TRACE_WIFIBLAST_REPORT_SENT", telemetry_buf);
     wifi_util_dbg_print(WIFI_BLASTER, "Creation of Telemetry record is successful\n");
-    CcspTraceInfo(("%s-%d Blaster report successfully sent to Parodus WebPA component\n", __FUNCTION__, __LINE__));
+    wifi_mgr->wifi_ccsp.desc.CcspTraceInfoRdkb_fn("%s-%d Blaster report successfully sent to Parodus WebPA component\n", __FUNCTION__, __LINE__);
     if (telemetry_buf != NULL) {
         free(telemetry_buf);
         telemetry_buf = NULL;

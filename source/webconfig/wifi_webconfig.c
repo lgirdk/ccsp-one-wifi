@@ -24,9 +24,7 @@
 #include <unistd.h>
 #include "collection.h"
 #include "wifi_webconfig.h"
-#if DML_SUPPORT
 #include "wifi_monitor.h"
-#endif // DML_SUPPORT
 #include "wifi_util.h"
 #include "wifi_ctrl.h"
 
@@ -256,11 +254,7 @@ webconfig_error_t webconfig_init(webconfig_t *config)
 {
 
     if ((config->initializer <= webconfig_initializer_none) || (config->initializer >= webconfig_initializer_max)) {
-#if DML_SUPPORT
         wifi_util_error_print(WIFI_WEBCONFIG,"%s:%d: initializer must be set to onewifi or dml or ovsdbmgr", __func__, __LINE__);
-#else
-        wifi_util_error_print(WIFI_WEBCONFIG,"%s:%d: initializer must be set to onewifi or ovsdbmgr", __func__, __LINE__);
-#endif // DML_SUPPORT
         return webconfig_error_init;
     }
 
@@ -568,7 +562,6 @@ webconfig_error_t webconfig_init(webconfig_t *config)
     config->subdocs[webconfig_subdoc_type_cac].translate_from_subdoc = translate_from_cac_config_subdoc;
 #endif
 
-#ifdef DML_SUPPORT
     config->subdocs[webconfig_subdoc_type_radio_stats].type = webconfig_subdoc_type_radio_stats;
     strcpy(config->subdocs[webconfig_subdoc_type_radio_stats].name, "Radio_Channel_Stats");
     config->subdocs[webconfig_subdoc_type_radio_stats].major = 1;
@@ -628,7 +621,6 @@ webconfig_error_t webconfig_init(webconfig_t *config)
     config->subdocs[webconfig_subdoc_type_radio_temperature].decode_subdoc = decode_radio_temperature_stats_subdoc;
     config->subdocs[webconfig_subdoc_type_radio_temperature].translate_to_subdoc = translate_to_radio_temperature_stats_subdoc;
     config->subdocs[webconfig_subdoc_type_radio_temperature].translate_from_subdoc = translate_from_radio_temperature_stats_subdoc;
-#endif
     config->proto_desc.translate_to = translate_to_proto;
     config->proto_desc.translate_from = translate_from_proto;
 

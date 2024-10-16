@@ -734,10 +734,8 @@ static void hotspotTunnelHandler(char *event_name, raw_data_t *p_data)
 bus_error_t get_assoc_clients_data(char *event_name, raw_data_t *p_data)
 {
     webconfig_subdoc_data_t data;
-#if DML_SUPPORT
     assoc_dev_data_t *assoc_dev_data;
     int itr, itrj;
-#endif
     wifi_mgr_t *mgr = (wifi_mgr_t *)get_wifimgr_obj();
     wifi_ctrl_t *ctrl = (wifi_ctrl_t *)get_wifictrl_obj();
 
@@ -746,7 +744,6 @@ bus_error_t get_assoc_clients_data(char *event_name, raw_data_t *p_data)
         return bus_error_invalid_operation;
     }
 
-#if DML_SUPPORT
     pthread_mutex_lock(&ctrl->lock);
     for (itr = 0; itr < MAX_NUM_RADIOS; itr++) {
         for (itrj = 0; itrj < MAX_NUM_VAP_PER_RADIO; itrj++) {
@@ -763,7 +760,6 @@ bus_error_t get_assoc_clients_data(char *event_name, raw_data_t *p_data)
         }
     }
     pthread_mutex_unlock(&ctrl->lock);
-#endif
     memset(&data, 0, sizeof(webconfig_subdoc_data_t));
 
     memcpy((unsigned char *)&data.u.decoded.radios, (unsigned char *)&mgr->radio_config,
@@ -975,10 +971,8 @@ char *get_assoc_devices_blob()
 {
     char *str = NULL;
     webconfig_subdoc_data_t *pdata = NULL;
-#if DML_SUPPORT
     assoc_dev_data_t *assoc_dev_data;
     int itr, itrj;
-#endif
     wifi_mgr_t *mgr = (wifi_mgr_t *)get_wifimgr_obj();
     wifi_ctrl_t *ctrl = (wifi_ctrl_t *)get_wifictrl_obj();
 
@@ -987,7 +981,6 @@ char *get_assoc_devices_blob()
         return NULL;
     }
 
-#if DML_SUPPORT
     pthread_mutex_lock(&ctrl->lock);
     for (itr = 0; itr < MAX_NUM_RADIOS; itr++) {
         for (itrj = 0; itrj < MAX_NUM_VAP_PER_RADIO; itrj++) {
@@ -1005,7 +998,6 @@ char *get_assoc_devices_blob()
     }
     pthread_mutex_unlock(&ctrl->lock);
 
-#endif
     pdata = (webconfig_subdoc_data_t *)malloc(sizeof(webconfig_subdoc_data_t));
     if (pdata == NULL) {
         wifi_util_error_print(WIFI_CTRL, "%s:%d Failed to allocate memory.\n", __func__, __LINE__);
@@ -1357,7 +1349,6 @@ static int eth_bh_status_notify()
 
 void speed_test_handler (char *event_name, raw_data_t *p_data)
 {
-#if DML_SUPPORT
     speed_test_data_t speed_test_data = { 0 };
 
     wifi_ctrl_t *ctrl = (wifi_ctrl_t *)get_wifictrl_obj();
@@ -1380,7 +1371,6 @@ void speed_test_handler (char *event_name, raw_data_t *p_data)
     speed_test_data.speed_test_timeout = ctrl->speed_test_timeout;
     push_event_to_ctrl_queue(&speed_test_data, sizeof(speed_test_data_t),
         wifi_event_type_speed_test, 0, NULL);
-#endif
     return;
 }
 
@@ -1738,7 +1728,6 @@ bus_error_t events_STAtable_addrowhandler(char const *tableName, char const *ali
 
     return bus_error_success;
 }
-#ifdef DML_SUPPORT
 static event_bus_element_t *events_getEventElement(char *eventName)
 {
     int i;
@@ -1758,7 +1747,6 @@ static event_bus_element_t *events_getEventElement(char *eventName)
     }
     return NULL;
 }
-#endif
 
 bus_error_t eventSubHandler(char *eventName, bus_event_sub_action_t action,
     int32_t interval, bool *autoPublish)
@@ -1769,7 +1757,6 @@ bus_error_t eventSubHandler(char *eventName, bus_event_sub_action_t action,
         __func__, __LINE__, action == bus_event_action_subscribe ? "subscribe" : "unsubscribe",
         eventName, *autoPublish, interval);
 
-#ifdef DML_SUPPORT
     unsigned int idx = 0;
     int ret = 0, scan_mode = WIFI_RADIO_SCAN_MODE_ONCHAN;
     event_bus_element_t *event;
@@ -2045,11 +2032,9 @@ bus_error_t eventSubHandler(char *eventName, bus_event_sub_action_t action,
     }
     pthread_mutex_unlock(&events_bus_data->events_bus_lock);
     wifi_util_dbg_print(WIFI_CTRL, "Exit %s: Event %s\n", __FUNCTION__, eventName);
-#endif
     return bus_error_success;
 }
 
-#ifdef DML_SUPPORT
 bus_error_t ap_get_handler(char *name, raw_data_t *p_data)
 {
     unsigned int idx = 0;
@@ -2215,7 +2200,6 @@ bus_error_t ap_table_addrowhandler(char const *tableName, char const *aliasName,
     return bus_error_success;
 }
 
-#endif
 
 static bus_error_t stats_table_addrowhandler(char const *tableName, char const *aliasName,
     uint32_t *instNum)
@@ -2524,7 +2508,6 @@ int events_bus_publish(wifi_event_t *evt)
 bus_error_t get_client_assoc_request_multi(char const* methodName, raw_data_t *inParams,
     raw_data_t *outParams, void *asyncHandle)
 {
-#ifdef DML_SUPPORT
     sta_data_t *sta;
     unsigned int vap_index = 0;
     frame_data_t tmp_data;
@@ -2593,11 +2576,9 @@ bus_error_t get_client_assoc_request_multi(char const* methodName, raw_data_t *i
     memcpy(outParams->raw_data.bytes, (uint8_t *)l_data, output_len);
     outParams->raw_data_len = output_len;
 
-#endif
     return bus_error_success;
 }
 
-#ifdef DML_SUPPORT
 bus_error_t set_force_vap_apply(char *name, raw_data_t *p_data)
 {
     unsigned int idx = 0;
@@ -2675,7 +2656,6 @@ bus_error_t set_force_vap_apply(char *name, raw_data_t *p_data)
 
     return bus_error_invalid_input;
 }
-#endif
 
 void bus_register_handlers(wifi_ctrl_t *ctrl)
 {
@@ -2748,7 +2728,6 @@ void bus_register_handlers(wifi_ctrl_t *ctrl)
                                 { WIFI_STA_SELFHEAL_CONNECTION_TIMEOUT, bus_element_type_event,
                                     { get_sta_connection_timeout, NULL, NULL, NULL, NULL, NULL}, slow_speed, ZERO_TABLE,
                                     { bus_data_type_boolean, false, 0, 0, 0, NULL } },
-#ifdef DML_SUPPORT
                                 { WIFI_ACCESSPOINT_TABLE, bus_element_type_table,
                                     { NULL, NULL, ap_table_addrowhandler, ap_table_removerowhandler,NULL, NULL}, slow_speed, num_of_vaps,
                                     { bus_data_type_object, false, 0, 0, 0, NULL } },
@@ -2767,7 +2746,6 @@ void bus_register_handlers(wifi_ctrl_t *ctrl)
                                 { WIFI_ACCESSPOINT_FORCE_APPLY, bus_element_type_method,
                                     { NULL, set_force_vap_apply, NULL, NULL, NULL, NULL}, slow_speed, ZERO_TABLE,
                                     { bus_data_type_boolean, true, 0, 0, 0, NULL } },
-#endif
                                 { ACCESSPOINT_ASSOC_REQ_EVENT, bus_element_type_method,
                                     { NULL, NULL, NULL, NULL, NULL, NULL}, slow_speed, ZERO_TABLE,
                                     { bus_data_type_string, true, 0, 0, 0, NULL } },

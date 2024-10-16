@@ -21,9 +21,6 @@
 #include <stdbool.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#if DML_SUPPORT
-#include "ansc_platform.h"
-#endif // DML_SUPPORT
 #include "wifi_hal.h"
 #include "wifi_ctrl.h"
 #include "wifi_mgr.h"

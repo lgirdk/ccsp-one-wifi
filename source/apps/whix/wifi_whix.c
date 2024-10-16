@@ -18,8 +18,6 @@
  **************************************************************************/
 
 #include <telemetry_busmessage_sender.h>
-#include "cosa_wifi_apis.h"
-#include "ccsp_psm_helper.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -41,14 +39,11 @@
 #include <sys/un.h>
 #include <assert.h>
 #include <limits.h>
-#include "ansc_status.h"
 #include <sysevent/sysevent.h>
-#include "ccsp_base_api.h"
 #include "wifi_passpoint.h"
-#include "ccsp_trace.h"
 #include "safec_lib_common.h"
-#include "ccsp_WifiLog_wrapper.h"
 #include "secure_wrapper.h"
+#include <stdint.h>
 
 #ifndef  UNREFERENCED_PARAMETER
 #define UNREFERENCED_PARAMETER(_p_)         (void)(_p_)
@@ -188,12 +183,13 @@ int whix_upload_channel_width_telemetry(unsigned int radio_index)
     BOOL radioEnabled = FALSE;
     char *t_str = NULL;
     unsigned long int itr = 0;
+    wifi_mgr_t *wifi_mgr = (wifi_mgr_t *) get_wifimgr_obj();
 
     wifi_util_dbg_print(WIFI_APPS, "Entering %s:%d \n", __FUNCTION__, __LINE__);
     wifi_radio_operationParam_t* radioOperation = getRadioOperationParam(radio_index);
 
     if (radioOperation == NULL) {
-        CcspTraceWarning(("%s : failed to getRadioOperationParam with radio index:%d \n", __FUNCTION__, radio_index));
+        wifi_mgr->wifi_ccsp.desc.CcspTraceWarningRdkb_fn("%s : failed to getRadioOperationParam with radio index:%d \n", __FUNCTION__, radio_index);
         radioEnabled = FALSE;
     } else {
         radioEnabled = radioOperation->enable;
@@ -1100,6 +1096,7 @@ int upload_client_telemetry_data(wifi_app_t *app, unsigned int num_devs, unsigne
     bool is_managed_wifi = false;
     unsigned int vap_array_index;
     unsigned int radioIndex = getRadioIndexFromAp(vap_index);
+    wifi_mgr_t *wifi_mgr = (wifi_mgr_t *) get_wifimgr_obj();
 
     if (NULL == sta && num_devs != 0) {
         wifi_util_error_print(WIFI_APPS, "%s:%d sta is NULL and num_devs %u\n", __func__, __LINE__,
@@ -1140,8 +1137,7 @@ int upload_client_telemetry_data(wifi_app_t *app, unsigned int num_devs, unsigne
 
         wifi_radio_operationParam_t *radioOperation = getRadioOperationParam(radioIndex);
         if (radioOperation == NULL) {
-            CcspTraceWarning(
-                ("%s : failed to getRadioOperationParam with radio index \n", __FUNCTION__));
+            wifi_mgr->wifi_ccsp.desc.CcspTraceWarningRdkb_fn("%s : failed to getRadioOperationParam with radio index \n", __FUNCTION__);
             return RETURN_ERR;
         }
 
@@ -1677,7 +1673,7 @@ int upload_client_telemetry_data(wifi_app_t *app, unsigned int num_devs, unsigne
         wifi_util_error_print(WIFI_APPS, "%s: wrong vapIndex:%d \n", __FUNCTION__, vap_index);
     }
     if (sendIndication == true) {
-        BOOLEAN bReconnectCountEnable = 0;
+        bool bReconnectCountEnable = 0;
         // check whether Reconnect Count is enabled or not fro individual vAP
         get_multi_vap_dml_parameters(vap_index, RECONNECT_COUNT_STATUS, &bReconnectCountEnable);
         if (bReconnectCountEnable == true) {

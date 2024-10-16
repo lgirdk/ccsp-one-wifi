@@ -16,19 +16,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
  **************************************************************************/
-#if DML_SUPPORT
-#include <telemetry_busmessage_sender.h>
-#include "cosa_wifi_apis.h"
-#include "ccsp_psm_helper.h"
-#include "ansc_status.h"
-#include <sysevent/sysevent.h>
-#include "ccsp_base_api.h"
-#include "ccsp_trace.h"
-#include "safec_lib_common.h"
-#include "ccsp_WifiLog_wrapper.h"
 #include "harvester.h"
 #include "wifi_passpoint.h"
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -79,11 +68,13 @@
 #include "common/ieee802_11_defs.h"
 #include "const.h"
 #include "pktgen.h"
+#include "misc.h"
 
 #ifndef  UNREFERENCED_PARAMETER
 #define UNREFERENCED_PARAMETER(_p_)         (void)(_p_)
 #endif
 
+#define WIFI_INDEX_MAX MAX_VAP
 #define MIN_MAC_LEN 12
 #define MAC_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
 #define MAC_FMT_TRIMMED "%02x%02x%02x%02x%02x%02x"
@@ -98,7 +89,6 @@
 #define MQTTCM_DISABLE_FLAG "/mnt/data/pstore/disable_mqttcm"
 #endif
 
-#if DML_SUPPORT
 #define RSN_SELECTOR_GET(a) WPA_GET_BE32((const uint8_t *) (a))
 #define RSN_SELECTOR(a, b, c, d) \
     ((((uint32_t) (a)) << 24) | (((uint32_t) (b)) << 16) | (((uint32_t) (c)) << 8) | \
@@ -177,7 +167,6 @@ extern void* bus_handle;
 #define ASSOC_REQ_MAC_HEADER_LEN 24 + 2 + 2 // 4 bytes after mac header reserved for fixed len fields
 
 char *instSchemaIdBuffer = "8b27dafc-0c4d-40a1-b62c-f24a34074914/4388e585dd7c0d32ac47e71f634b579b";
-#endif // DML_SUPPORT
 
 static wifi_monitor_t g_monitor_module;
 bool             mqttcm_enabled = false;
@@ -185,7 +174,6 @@ static wifi_apps_coordinator_t g_apps_coordinator;
 wifi_apps_coordinator_t *get_apps_coordinator(void);
 hash_map_t * coordinator_get_collector_list(void);
 
-#if DML_SUPPORT
 static unsigned msg_id = 1000;
 static const char *wifi_health_log = "/rdklogs/logs/wifihealth.txt";
 int radio_stats_monitor = 0;
@@ -223,8 +211,6 @@ static void scheduler_telemetry_tasks(void);
 int csi_sendPingData(void * arg);
 static int csi_update_pinger(int ap_index, mac_addr_t mac_addr, bool pause_pinger);
 static int clientdiag_sheduler_enable(int ap_index);
-int radio_diagnostics(void *arg);
-#endif // DML_SUPPORT
 
 void deinit_wifi_monitor(void);
 void SetBlasterMqttTopic(char *mqtt_topic);
@@ -236,7 +222,6 @@ static inline char *to_sta_key    (mac_addr_t mac, sta_key_t key)
     return (char *)key;
 }
 
-#if DML_SUPPORT
 BOOL IsWiFiApStatsEnable(UINT uvAPIndex)
 {
     return ((sWiFiDmlApStatsEnableCfg[uvAPIndex]) ? TRUE : FALSE);
@@ -517,7 +502,6 @@ BOOL client_fast_redeauth(unsigned int apIndex, char *mac)
     return FALSE;
 }
 
-#endif // DML_SUPPORT
 
 static char*
 macbytes_to_string(mac_address_t mac, unsigned char* string)
@@ -532,7 +516,6 @@ macbytes_to_string(mac_address_t mac, unsigned char* string)
     return (char *)string;
 }
 
-#if DML_SUPPORT
 static void
 reset_client_stats_info(unsigned int apIndex)
 {
@@ -784,7 +767,6 @@ int get_sta_stats_for_vap(int ap_index, wifi_associated_dev3_t *assoc_dev_array,
     pthread_mutex_unlock(&g_monitor_module.data_lock);
     return 0;
 }
-#endif
 
 void send_wifi_disconnect_event_to_ctrl(mac_address_t mac_addr, unsigned int ap_index)
 {
@@ -797,7 +779,6 @@ void send_wifi_disconnect_event_to_ctrl(mac_address_t mac_addr, unsigned int ap_
     push_event_to_ctrl_queue(&assoc_data, sizeof(assoc_data), wifi_event_type_hal_ind, wifi_event_hal_disassoc_device, NULL);
 }
 
-#if DML_SUPPORT
 sta_data_t *create_sta_data_hash_map(hash_map_t *sta_map, mac_addr_t l_sta_mac)
 {
     pthread_mutex_lock(&g_monitor_module.data_lock);
@@ -951,19 +932,16 @@ void process_deauthenticate	(unsigned int ap_index, auth_deauth_dev_t *dev)
     process_disconnect(ap_index, dev);
 }
 
-#endif // DML_SUPPORT
 
 void process_connect(unsigned int ap_index, auth_deauth_dev_t *dev)
 {
     sta_key_t sta_key;
     sta_data_t *sta;
     hash_map_t     *sta_map;
-#if DML_SUPPORT
     struct timespec tv_now, t_diff, t_tmp;
     unsigned int i = 0;
     int vap_status = 0;
     wifi_mgr_t *mgr = get_wifimgr_obj();
-#endif // DML_SUPPORT
     unsigned int vap_array_index;
     getVAPArrayIndexFromVAPIndex(ap_index, &vap_array_index);
 
@@ -983,7 +961,6 @@ void process_connect(unsigned int ap_index, auth_deauth_dev_t *dev)
         pthread_mutex_unlock(&g_monitor_module.data_lock);
     }
 
-#if DML_SUPPORT
     clock_gettime(CLOCK_MONOTONIC, &tv_now);
     if (timespecisset(&(sta->last_connected_time))) {
         if (timespeccmp(&(sta->last_disconnected_time), &(g_monitor_module.bssid_data[vap_array_index].last_sta_update_time), >)) {//sta disconnected before counter update
@@ -1017,11 +994,9 @@ void process_connect(unsigned int ap_index, auth_deauth_dev_t *dev)
 
     /* reset stats of client */
     memset((unsigned char *)&sta->dev_stats_last, 0, sizeof(wifi_associated_dev3_t));
-#endif // DML_SUPPORT
     memset((unsigned char *)&sta->dev_stats, 0, sizeof(wifi_associated_dev3_t));
     memcpy(&sta->dev_stats, &dev->dev_stats, sizeof(wifi_associated_dev3_t));
     sta->dev_stats.cli_Active = true;
-#if DML_SUPPORT
     sta->connection_authorized = true;
     /*To avoid duplicate entries in hash map of different vAPs eg:RDKB-21582
       Also when clients moved away from a vAP and connect back to other vAP this will be usefull*/
@@ -1046,7 +1021,6 @@ void process_connect(unsigned int ap_index, auth_deauth_dev_t *dev)
             }
         }
     }
-#endif // DML_SUPPORT
 }
 
 void process_disconnect	(unsigned int ap_index, auth_deauth_dev_t *dev)
@@ -1054,10 +1028,8 @@ void process_disconnect	(unsigned int ap_index, auth_deauth_dev_t *dev)
     sta_key_t sta_key;
     sta_data_t *sta;
     hash_map_t     *sta_map;
-#if DML_SUPPORT
     struct timespec tv_now, t_diff, t_tmp;
     instant_msmt_t msmt;
-#endif // DML_SUPPORT
     unsigned int vap_array_index;
 
     getVAPArrayIndexFromVAPIndex(ap_index, &vap_array_index);
@@ -1070,7 +1042,6 @@ void process_disconnect	(unsigned int ap_index, auth_deauth_dev_t *dev)
         return;
     }
 
-#if DML_SUPPORT
     clock_gettime(CLOCK_MONOTONIC, &tv_now);
     if (timespeccmp(&(sta->last_connected_time), &(g_monitor_module.bssid_data[vap_array_index].last_sta_update_time), >)) {//sta disconnected before counter update
         timespecsub(&tv_now, &(sta->last_connected_time), &t_diff);
@@ -1097,10 +1068,8 @@ void process_disconnect	(unsigned int ap_index, auth_deauth_dev_t *dev)
     /* stop the instant measurement only if the client for which instant measuremnt
       is running got disconnected from AP
       */
-#endif // DML_SUPPORT
 }
 
-#if DML_SUPPORT
 
 int get_neighbor_scan_cfg(int radio_index,
                           wifi_neighbor_ap2_t *neighbor_results,
@@ -1116,7 +1085,6 @@ int get_neighbor_scan_cfg(int radio_index,
     return 0;
 }
 
-#endif // DML_SUPPORT
 
 void clear_sta_counters(unsigned int vap_index)
 {
@@ -1242,10 +1210,8 @@ void *monitor_function  (void *data)
     strncpy(event_buff, "Init completed", sizeof(event_buff)-1);
     push_event_to_ctrl_queue(event_buff, (strlen(event_buff) +1), wifi_event_type_command, wifi_event_type_notify_monitor_done, NULL);
 
-#if DML_SUPPORT
     /* Set the monitor_initialization_done flag to notify */
     monitor_initialization_done = true;
-#endif // DML_SUPPORT
 
     prctl(PR_SET_NAME,  __func__, 0, 0, 0);
 
@@ -1276,16 +1242,12 @@ void *monitor_function  (void *data)
 
                 event_data = event->u.mon_data;
 
-#if DML_SUPPORT
                 //Send data to wifi_events library
                 events_bus_publish(event);
-#endif // DML_SUPPORT
                 switch (event->sub_type) {
-#if DML_SUPPORT
                     case wifi_event_monitor_diagnostics:
                         //process_diagnostics(event_data->ap_index, &event_data->.devs);
                     break;
-#endif // DML_SUPPORT
 
                     case wifi_event_monitor_connect:
                         process_connect(event_data->ap_index, &event_data->u.dev);
@@ -1294,7 +1256,6 @@ void *monitor_function  (void *data)
                     case wifi_event_monitor_disconnect:
                         process_disconnect(event_data->ap_index, &event_data->u.dev);
                     break;
-#if DML_SUPPORT
 
                     case wifi_event_monitor_deauthenticate:
                         process_deauthenticate(event_data->ap_index, &event_data->u.dev);
@@ -1326,7 +1287,6 @@ void *monitor_function  (void *data)
                         g_monitor_module.inst_msmt_id = 0;
                         scheduler_telemetry_tasks();
                     break;
-#endif // DML_SUPPORT
                     case wifi_event_monitor_data_collection_config:
                         coordinator_check_stats_config(&event_data->u.mon_stats_config);
                     break;
@@ -1371,7 +1331,6 @@ void *monitor_function  (void *data)
     return NULL;
 }
 
-#if DML_SUPPORT
 static int refresh_task_period(void *arg)
 {
     unsigned int    new_upload_period;
@@ -1389,7 +1348,6 @@ static int refresh_task_period(void *arg)
     }
     return TIMER_TASK_COMPLETE;
 }
-#endif // DML_SUPPORT
 
 bool is_device_associated(int ap_index, char *mac)
 {
@@ -1412,7 +1370,6 @@ bool is_device_associated(int ap_index, char *mac)
     return false;
 }
 
-#if DML_SUPPORT
 int timeval_subtract (struct timeval *result, struct timeval *end, struct timeval *start)
 {
     if(result == NULL || end == NULL || start == NULL) {
@@ -1437,7 +1394,6 @@ int timeval_subtract (struct timeval *result, struct timeval *end, struct timeva
 
     return (end->tv_sec < start->tv_sec);
 }
-#endif // DML_SUPPORT
 
 int  getApIndexfromClientMac(char *check_mac)
 {
@@ -1465,7 +1421,6 @@ int  getApIndexfromClientMac(char *check_mac)
     return -1;
 }
 
-#if DML_SUPPORT
 static void rtattr_parse(struct rtattr *table[], int max, struct rtattr *rta, int len)
 {
     unsigned short type;
@@ -2120,7 +2075,6 @@ static int readLogInterval()
     return logInterval;
 }
 
-#endif // DML_SUPPORT
 
 
 int get_radio_data(int radio_index, wifi_radioTrafficStats2_t *radio_traffic_stats)
@@ -2152,92 +2106,6 @@ int get_radio_data(int radio_index, wifi_radioTrafficStats2_t *radio_traffic_sta
     pthread_mutex_unlock(&g_monitor_module.data_lock);
 
     return 0;
-}
-
-#if DML_SUPPORT
-int radio_diagnostics(void *arg)
-{
-    wifi_radioTrafficStats2_t radioTrafficStats;
-    //char            ChannelsInUse[256] = {0};
-    char            RadioFreqBand[64] = {0};
-    char            RadioChanBand[64] = {0};
-    static unsigned int radiocnt = 0;
-    wifi_radio_operationParam_t* radioOperation = getRadioOperationParam(radiocnt);
-    wifi_freq_bands_t band_enum;
-
-    if (g_monitor_module.is_blaster_running == true) {
-        wifi_util_dbg_print(WIFI_MON, "%s:%d Active Measurement is running, skipping radio diagnostics...\n",__func__,__LINE__);
-        return TIMER_TASK_COMPLETE;
-    }
-
-    wifi_util_dbg_print(WIFI_MON, "%s : %d getting radio Traffic stats for Radio %d\n",__func__,__LINE__, radiocnt);
-    memset(&radioTrafficStats, 0, sizeof(wifi_radioTrafficStats2_t));
-    memset(&g_monitor_module.radio_data[radiocnt], 0, sizeof(radio_data_t));
-
-    if (radioOperation != NULL) {
-        if(radioOperation->enable) {
-
-            if (wifi_getRadioTrafficStats2(radiocnt, &radioTrafficStats) == RETURN_OK) {
-                /* update the g_active_msmt with the radio data */
-                g_monitor_module.radio_data[radiocnt].NoiseFloor = radioTrafficStats.radio_NoiseFloor;
-                g_monitor_module.radio_data[radiocnt].RadioActivityFactor = radioTrafficStats.radio_ActivityFactor;
-                g_monitor_module.radio_data[radiocnt].CarrierSenseThreshold_Exceeded = radioTrafficStats.radio_CarrierSenseThreshold_Exceeded;
-                g_monitor_module.radio_data[radiocnt].channelUtil = radioTrafficStats.radio_ChannelUtilization;
-                g_monitor_module.radio_data[radiocnt].radio_BytesSent = radioTrafficStats.radio_BytesSent;
-                g_monitor_module.radio_data[radiocnt].radio_BytesReceived = radioTrafficStats.radio_BytesReceived;
-                g_monitor_module.radio_data[radiocnt].radio_PacketsSent = radioTrafficStats.radio_PacketsSent;
-                g_monitor_module.radio_data[radiocnt].radio_PacketsReceived = radioTrafficStats.radio_PacketsReceived;
-                g_monitor_module.radio_data[radiocnt].radio_ErrorsSent = radioTrafficStats.radio_ErrorsSent;
-                g_monitor_module.radio_data[radiocnt].radio_ErrorsReceived = radioTrafficStats.radio_ErrorsReceived;
-                g_monitor_module.radio_data[radiocnt].radio_DiscardPacketsSent = radioTrafficStats.radio_DiscardPacketsSent;
-                g_monitor_module.radio_data[radiocnt].radio_DiscardPacketsReceived = radioTrafficStats.radio_DiscardPacketsReceived;
-                g_monitor_module.radio_data[radiocnt].radio_InvalidMACCount = radioTrafficStats.radio_InvalidMACCount;
-                g_monitor_module.radio_data[radiocnt].radio_PacketsOtherReceived = radioTrafficStats.radio_PacketsOtherReceived;
-                g_monitor_module.radio_data[radiocnt].radio_RetransmissionMetirc = radioTrafficStats.radio_RetransmissionMetirc;
-                g_monitor_module.radio_data[radiocnt].radio_PLCPErrorCount = radioTrafficStats.radio_PLCPErrorCount;
-                g_monitor_module.radio_data[radiocnt].radio_FCSErrorCount = radioTrafficStats.radio_FCSErrorCount;
-                g_monitor_module.radio_data[radiocnt].radio_MaximumNoiseFloorOnChannel = radioTrafficStats.radio_MaximumNoiseFloorOnChannel;
-                g_monitor_module.radio_data[radiocnt].radio_MinimumNoiseFloorOnChannel = radioTrafficStats.radio_MinimumNoiseFloorOnChannel;
-                g_monitor_module.radio_data[radiocnt].radio_MedianNoiseFloorOnChannel = radioTrafficStats.radio_MedianNoiseFloorOnChannel;
-                g_monitor_module.radio_data[radiocnt].radio_StatisticsStartTime = radioTrafficStats.radio_StatisticsStartTime;
-#if 0
-                /* When we trigger below API then Broadcom driver internally trigger offchannel scan.
-                *  We don't want this offchannel scan at every 30 seconds. So, for resolution of
-                *  this issue we commented out below API.
-                */
-                wifi_getRadioChannelsInUse (radiocnt, ChannelsInUse);
-                strncpy((char *)&g_monitor_module.radio_data[radiocnt].ChannelsInUse, ChannelsInUse,sizeof(ChannelsInUse));
-#endif
-                g_monitor_module.radio_data[radiocnt].primary_radio_channel = radioOperation->channel;
-
-                band_enum = radioOperation->band;
-                if (freq_band_conversion(&band_enum, (char *)RadioFreqBand, sizeof(RadioFreqBand), ENUM_TO_STRING) != RETURN_OK)
-                {
-                    wifi_util_error_print(WIFI_MON,"%s:%d: frequency band conversion failed\n", __func__, __LINE__);
-                } else {
-                    strncpy((char *)&g_monitor_module.radio_data[radiocnt].frequency_band, RadioFreqBand, sizeof(RadioFreqBand));
-                    g_monitor_module.radio_data[radiocnt].frequency_band[sizeof(g_monitor_module.radio_data[radiocnt].frequency_band)-1] = '\0';
-                    wifi_util_dbg_print(WIFI_MON, "%s:%d: Frequency band is  %s\n", __func__, __LINE__, RadioFreqBand);
-                }
-
-                wifi_getRadioOperatingChannelBandwidth(radiocnt,RadioChanBand);
-                strncpy((char *)&g_monitor_module.radio_data[radiocnt].channel_bandwidth, RadioChanBand,sizeof(RadioChanBand));
-                wifi_util_dbg_print(WIFI_MON, "%s:%d: channelbandwidth is  %s\n", __func__, __LINE__, RadioChanBand);
-            } else {
-                wifi_util_error_print(WIFI_MON, "%s : %d wifi_getRadioTrafficStats2 failed for rdx : %d\n",__func__,__LINE__,radiocnt);
-            }
-        } else {
-            wifi_util_dbg_print(WIFI_MON, "%s : %d Radio : %d is not enabled\n",__func__,__LINE__,radiocnt);
-        }
-    } else {
-        wifi_util_error_print(WIFI_MON, "%s : %d Failed to get getRadioOperationParam for rdx : %d\n",__func__,__LINE__,radiocnt);
-    }
-    radiocnt++;
-    if (radiocnt >= getNumberRadios()) {
-        radiocnt = 0;
-        return TIMER_TASK_COMPLETE;
-    }
-    return TIMER_TASK_CONTINUE;
 }
 
 bool active_sta_connection_status(int ap_index, char *mac)
@@ -2761,7 +2629,6 @@ static void scheduler_telemetry_tasks(void)
         }
     }
 }
-#endif // DML_SUPPORT
 
 void update_ecomode_radios()
 {
@@ -2803,12 +2670,10 @@ int init_wifi_monitor()
 {
     unsigned int i = 0;
     pthread_condattr_t cond_attr;
-#if DML_SUPPORT
     wifi_mgr_t *mgr = get_wifimgr_obj();
     unsigned int uptimeval = 0;
     int rssi;
     UINT vap_index, radio;
-#endif // DML_SUPPORT
     //Initialize MQTTCM
     wifi_util_info_print(WIFI_MON,"%s:%d Monitor init\n", __func__, __LINE__);
 #ifdef MQTTCM
@@ -2824,7 +2689,6 @@ int init_wifi_monitor()
     }
 #endif
     update_ecomode_radios();
-#if DML_SUPPORT
     memset(g_monitor_module.cliStatsList, 0, MAX_VAP);
     g_monitor_module.upload_period = get_upload_period(60);//Default value 60
     uptimeval=get_sys_uptime();
@@ -2851,12 +2715,9 @@ int init_wifi_monitor()
             wifi_util_dbg_print(WIFI_MON, "%s: wrong vapIndex:%d \n", __FUNCTION__, i);
         }
     }
-#endif // DML_SUPPORT
 
     clock_gettime(CLOCK_MONOTONIC, &g_monitor_module.last_signalled_time);
-#if DML_SUPPORT
     clock_gettime(CLOCK_MONOTONIC, &g_monitor_module.last_polled_time);
-#endif // DML_SUPPORT
     pthread_condattr_init(&cond_attr);
     pthread_condattr_setclock(&cond_attr, CLOCK_MONOTONIC);
     pthread_cond_init(&g_monitor_module.cond, &cond_attr);
@@ -2893,7 +2754,6 @@ int init_wifi_monitor()
         wifi_util_error_print(WIFI_MON, "collector list hash map create failed\n");
         return -1;
     }
-#if DML_SUPPORT
 
     g_monitor_module.client_telemetry_id = 0;
     g_monitor_module.refresh_task_id = 0;
@@ -2928,12 +2788,10 @@ int init_wifi_monitor()
         deinit_wifi_monitor();
         return -1;
     }
-#endif // DML_SUPPORT
 
     g_monitor_module.exit_monitor = false;
     /* Initializing the lock for active measurement g_active_msmt.lock */
 
-#if DML_SUPPORT
     wifi_hal_newApAssociatedDevice_callback_register(device_associated);
     wifi_vapstatus_callback_register(vapstatus_callback);
     wifi_hal_apDeAuthEvent_callback_register(device_deauthenticated);
@@ -2941,7 +2799,6 @@ int init_wifi_monitor()
     wifi_hal_radius_eap_failure_callback_register(radius_eap_failure_callback);
     wifi_hal_radiusFallback_failover_callback_register(radius_fallback_and_failover_callback);
     scheduler_add_timer_task(g_monitor_module.sched, FALSE, NULL, refresh_assoc_frame_entry, NULL, (MAX_ASSOC_FRAME_REFRESH_PERIOD * 1000), 0, FALSE);
-#endif // DML_SUPPORT
 
     wifi_util_dbg_print(WIFI_MON, "%s:%d Wi-Fi monitor is initialized successfully\n", __func__, __LINE__);
 
@@ -2952,11 +2809,9 @@ int start_wifi_monitor ()
 {
     unsigned int i;
     UINT vap_index, radio;
-#if DML_SUPPORT
     //ONEWIFI To avoid the st
         //Cleanup all CSI clients configured in driver
     unsigned char def_mac[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-#endif // DML_SUPPORT
     wifi_mgr_t *mgr = get_wifimgr_obj();
 
      get_stubs_descriptor()->onewifi_pktgen_uninit_fn();
@@ -2975,11 +2830,9 @@ int start_wifi_monitor ()
             wifi_util_dbg_print(WIFI_MON, "%s:%d vap_bss_info->bssid is %s for vap %d", __func__,__LINE__,to_mac_str(g_monitor_module.bssid_data[i].bssid, mac_str), vap_index);
         }
 
-#if DML_SUPPORT
         //ONEWIFI To avoid the segmentation Fault
         //Cleanup all CSI clients configured in driver
-        wifi_enableCSIEngine(vap_index, def_mac, FALSE);
-#endif // DML_SUPPORT
+        get_misc_descriptor()->wifi_enableCSIEngine_fn(vap_index, def_mac, FALSE);
     }
 
     pthread_attr_t attr;
@@ -3001,18 +2854,16 @@ int start_wifi_monitor ()
     if(attrp != NULL)
         pthread_attr_destroy( attrp );
 
-#if DML_SUPPORT
-    g_monitor_module.sysevent_fd = sysevent_open("127.0.0.1", SE_SERVER_WELL_KNOWN_PORT, SE_VERSION, "wifiMonitor", &g_monitor_module.sysevent_token);
+    g_monitor_module.sysevent_fd = get_misc_descriptor()->sysevent_open_fn("127.0.0.1", 0, 0, "wifiMonitor", &g_monitor_module.sysevent_token);
     if (g_monitor_module.sysevent_fd < 0) {
         wifi_util_error_print(WIFI_MON, "%s:%d: Failed to open sysevent\n", __func__, __LINE__);
     } else {
         wifi_util_info_print(WIFI_MON, "%s:%d: Opened sysevent\n", __func__, __LINE__);
     }
-    if (initparodusTask() == -1) {
+    if (get_misc_descriptor()->initparodusTask_fn() == -1) {
         //wifi_util_dbg_print(WIFI_MON, "%s:%d: Failed to initialize paroduc task\n", __func__, __LINE__);
 
     }
-#endif // DML_SUPPORT
 
     return 0;
 }
@@ -3028,16 +2879,13 @@ void deinit_wifi_monitor()
        wbm_mqttcm_stop();
     }
 #endif
-#if DML_SUPPORT
     csi_pinger_data_t *pinger_data = NULL, *tmp_pinger_data = NULL;
     mac_addr_str_t mac_str = { 0 };
-    sysevent_close(g_monitor_module.sysevent_fd, g_monitor_module.sysevent_token);
-#endif // DML_SUPPORT
+    get_misc_descriptor()->sysevent_close_fn(g_monitor_module.sysevent_fd, g_monitor_module.sysevent_token);
     if(g_monitor_module.queue != NULL)
         queue_destroy(g_monitor_module.queue);
 
     scheduler_deinit(&(g_monitor_module.sched));
-#if DML_SUPPORT
     if(g_events_monitor.csi_pinger_map != NULL) {
         pinger_data = hash_map_get_first(g_events_monitor.csi_pinger_map);
         while (pinger_data != NULL) {
@@ -3052,7 +2900,6 @@ void deinit_wifi_monitor()
         hash_map_destroy(g_events_monitor.csi_pinger_map);
     }
     pthread_mutex_destroy(&g_events_monitor.lock);
-#endif // DML_SUPPORT
 
     collector_list = coordinator_get_collector_list();
 
@@ -3085,7 +2932,6 @@ void deinit_wifi_monitor()
     /* destory the active measurement g_active_msmt.lock */
 }
 
-#if DML_SUPPORT
 char* GetInstAssocDevSchemaIdBuffer()
 {
     return instSchemaIdBuffer;
@@ -3146,7 +2992,6 @@ long get_sys_uptime()
 
      return atoi(buff);
 }
-#endif // DML_SUPPORT
 
 wifi_monitor_t *get_wifi_monitor()
 {
@@ -3182,7 +3027,6 @@ int isVapEnabled (int wlanIndex)
     return 0;
 }
 
-#if DML_SUPPORT
 sta_data_t *get_stats_for_sta(unsigned int apIndex, mac_addr_t mac)
 {
     sta_data_t  *sta;
@@ -3206,7 +3050,6 @@ sta_data_t *get_stats_for_sta(unsigned int apIndex, mac_addr_t mac)
     pthread_mutex_unlock(&g_monitor_module.data_lock);
     return NULL;
 }
-#endif //DML_SUPPORT
 
 int get_dev_stats_for_radio(unsigned int radio_index, radio_data_t *radio_stats)
 {
@@ -3220,7 +3063,6 @@ int get_dev_stats_for_radio(unsigned int radio_index, radio_data_t *radio_stats)
     return RETURN_ERR;
 }
 
-#if DML_SUPPORT
 int get_radio_channel_utilization(unsigned int radio_index, int *chan_util)
 {
     int ret = RETURN_ERR;
@@ -3234,7 +3076,6 @@ int get_radio_channel_utilization(unsigned int radio_index, int *chan_util)
 
     return ret;
 }
-#endif // DML_SUPPORT
 
 int coordinator_calculate_clctr_interval(wifi_mon_collector_element_t *collector_elem, wifi_mon_provider_element_t *new_provider_elem , unsigned long *new_interval)
 {

@@ -20,9 +20,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h> /* strdup() */
-#ifdef DML_SUPPORT
-#include "ccsp_WifiLog_wrapper.h"
-#endif
 #include "const.h"
 #include "wifi_hal.h"
 #include "wifi_ctrl.h"
@@ -455,9 +452,7 @@ int webconfig_analyze_pending_states(wifi_ctrl_t *ctrl)
             wifi_util_dbg_print(WIFI_CTRL, "%s:%d - default pending subdoc status:0x%x\r\n", __func__, __LINE__, (ctrl->webconfig_state & CTRL_WEBCONFIG_STATE_MASK));
             break;
     }
-#if DML_SUPPORT
     apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_webconfig, wifi_event_webconfig_set_status, &type);
-#endif
     return RETURN_OK;
 }
 
@@ -493,75 +488,71 @@ static bool is_postassoc_cac_config_changed(wifi_vap_info_t *old, wifi_vap_info_
 
 void vap_param_config_changed_event_logging(wifi_vap_info_t *old, wifi_vap_info_t *new,char name[16],wifi_radio_operationParam_t *radio)
 {
-#if DML_SUPPORT
     if (radio->enable) {
-        CcspWifiEventTrace(("RDK_LOG_NOTICE,  WiFi radio %s is set to UP\n",name));
+        OneWifiEventTrace(("RDK_LOG_NOTICE,  WiFi radio %s is set to UP\n",name));
         if (new->u.bss_info.enabled) {
             if (IS_CHANGED(old->u.bss_info.enabled, new->u.bss_info.enabled)) {
-                CcspWifiEventTrace(("RDK_LOG_NOTICE, Wifi VAP Changed to UP\n"));
+                OneWifiEventTrace(("RDK_LOG_NOTICE, Wifi VAP Changed to UP\n"));
             }
             if (IS_STR_CHANGED(old->u.bss_info.ssid, new->u.bss_info.ssid,sizeof(old->u.bss_info.ssid))) {
-                CcspWifiEventTrace(("RDK_LOG_NOTICE, SSID Changed \n"));
+                OneWifiEventTrace(("RDK_LOG_NOTICE, SSID Changed \n"));
             }
             if (IS_STR_CHANGED(old->u.bss_info.security.u.key.key, new->u.bss_info.security.u.key.key,sizeof(old->u.bss_info.security.u.key.key))) {
-                CcspWifiEventTrace(("RDK_LOG_NOTICE, KeyPassphrase Changed \n "));
+                OneWifiEventTrace(("RDK_LOG_NOTICE, KeyPassphrase Changed \n "));
             }
             if (IS_CHANGED(old->u.bss_info.security.mode, new->u.bss_info.security.mode)) {
                 switch (new->u.bss_info.security.mode) {
                     case wifi_security_mode_none:
-                        CcspWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode None is enabled\n"));
+                        OneWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode None is enabled\n"));
                         break;
                     case wifi_security_mode_wep_64:
-                        CcspWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WEP-64 is enabled\n"));
+                        OneWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WEP-64 is enabled\n"));
                         break;
                     case wifi_security_mode_wep_128:
-                        CcspWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WEP-128 is enabled\n"));
+                        OneWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WEP-128 is enabled\n"));
                         break;
                     case wifi_security_mode_wpa_personal:
-                        CcspWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WPA-Personal is enabled\n"));
+                        OneWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WPA-Personal is enabled\n"));
                         break;
                     case wifi_security_mode_wpa2_personal:
-                        CcspWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WPA2-Personal is enabled\n"));
+                        OneWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WPA2-Personal is enabled\n"));
                         break;
                     case wifi_security_mode_wpa_wpa2_personal:
-                        CcspWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WPA-WPA2-Personal is enabled\n"));
+                        OneWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WPA-WPA2-Personal is enabled\n"));
                         break;
                     case wifi_security_mode_wpa_enterprise:
-                        CcspWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WPA-Enterprise is enabled\n"));
+                        OneWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WPA-Enterprise is enabled\n"));
                         break;
                     case wifi_security_mode_wpa2_enterprise:
-                        CcspWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WPA2-Enterprise is enabled\n"));
+                        OneWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WPA2-Enterprise is enabled\n"));
                         break;
                     case wifi_security_mode_wpa_wpa2_enterprise:
-                        CcspWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WPA-WPA2-Enterprise is enabled\n"));
+                        OneWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WPA-WPA2-Enterprise is enabled\n"));
                         break;
                     case wifi_security_mode_wpa3_personal:
-                        CcspWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WPA3-Personal is enabled\n"));
+                        OneWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WPA3-Personal is enabled\n"));
                         break;
                     case wifi_security_mode_wpa3_transition:
-                        CcspWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WPA3-Transition is enabled\n"));
+                        OneWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WPA3-Transition is enabled\n"));
                         break;
                     case wifi_security_mode_wpa3_enterprise:
-                        CcspWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WPA3-Enterprise is enabled\n"));
+                        OneWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode WPA3-Enterprise is enabled\n"));
                         break;
                     case wifi_security_mode_enhanced_open:
-                        CcspWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode Open is enabled\n"));
+                        OneWifiEventTrace(("RDK_LOG_NOTICE, Wifi security mode Open is enabled\n"));
                         break;
                     default:
-                        CcspWifiEventTrace(("RDK_LOG_NOTICE, Incorrect Wifi Security mode %d is enabled.\n",new->u.bss_info.security.mode));
+                        OneWifiEventTrace(("RDK_LOG_NOTICE, Incorrect Wifi Security mode %d is enabled.\n",new->u.bss_info.security.mode));
                         break;
                 }
             }
         } else {
-              CcspWifiEventTrace(("RDK_LOG_NOTICE, Wifi VAP is set to down\n"));
+              OneWifiEventTrace(("RDK_LOG_NOTICE, Wifi VAP is set to down\n"));
         }
     } else {
-          CcspWifiEventTrace(("RDK_LOG_NOTICE, Wifi radio %s is set to DOWN\n",name));
+          OneWifiEventTrace(("RDK_LOG_NOTICE, Wifi radio %s is set to DOWN\n",name));
     }
-#else
-    wifi_util_dbg_print(WIFI_CTRL,"%s:%d Not Inside CCSP_COMMON macro. \n",__func__,__LINE__);
     return;
-#endif
 }
 
 static void webconfig_send_sta_bssid_change_event(wifi_ctrl_t *ctrl, wifi_vap_info_t *old,
@@ -753,9 +744,7 @@ int webconfig_hal_vap_apply_by_name(wifi_ctrl_t *ctrl, webconfig_subdoc_decoded_
 
             memset(update_status, 0, sizeof(update_status));
             snprintf(update_status, sizeof(update_status), "%s %s", vap_names[i], (ret == RETURN_OK)?"success":"fail");
-#if DML_SUPPORT
             apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_webconfig, wifi_event_webconfig_hal_result, update_status);
-#endif
             if (vap_svc_is_public(tgt_vap_index)) {
                 wifi_util_dbg_print(WIFI_CTRL,"vapname is %s and %d \n",vap_info->vap_name,vap_info->u.bss_info.enabled);
                 if (svc->event_fn != NULL) {
@@ -1582,12 +1571,10 @@ void ecomode_telemetry_update_and_reboot(unsigned int index, bool active)
 
 void radio_param_config_changed_event_logging(wifi_radio_operationParam_t *old , wifi_radio_operationParam_t *new,char name[16])
 {
-#if DML_SUPPORT
     if(IS_CHANGED(old->enable,new->enable))
     {
-        CcspWifiEventTrace(("RDK_LOG_NOTICE, Wifi radio %s is set to %s\n",name,((new->enable==1)?"UP":"DOWN")));
+        OneWifiEventTrace(("RDK_LOG_NOTICE, Wifi radio %s is set to %s\n",name,((new->enable==1)?"UP":"DOWN")));
     }
-#endif
 }
 
 int webconfig_hal_radio_apply(wifi_ctrl_t *ctrl, webconfig_subdoc_decoded_data_t *data)
@@ -1738,18 +1725,14 @@ int push_data_to_apply_pending_queue(webconfig_subdoc_data_t *data)
     memcpy(temp_data, data, sizeof(webconfig_subdoc_data_t));
     temp_data->u.encoded.raw = strdup(data->u.encoded.raw);
     queue_push(ctrl->vif_apply_pending_queue, temp_data);
-#if DML_SUPPORT
     apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_webconfig, wifi_event_webconfig_data_to_apply_pending_queue, data);
-#endif
     return RETURN_OK;
 }
 
 void webconfig_analytic_event_data_to_hal_apply(webconfig_subdoc_data_t *data)
 {
     wifi_ctrl_t *ctrl = (wifi_ctrl_t *)get_wifictrl_obj();
-#if DML_SUPPORT
     apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_webconfig, wifi_event_webconfig_data_to_hal_apply, data);
-#endif
     return;
 }
 

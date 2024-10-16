@@ -20,15 +20,17 @@
 #ifndef WIFI_SSP_MAIN_H
 #define WIFI_SSP_MAIN_H
 
+#include <pthread.h>
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
 typedef struct {
-	pthread_t	tid;
-        int             argc;
-        char            **argv;
+    pthread_t   tid;
+    int         argc;
+    char        **argv;
 } wifi_ssp_t;
 
 #ifdef __cplusplus

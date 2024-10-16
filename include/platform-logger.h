@@ -16,8 +16,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
  **************************************************************************/
-
+#if 0
 #include <ccsp_trace.h>
 
 #define platform_trace_error(module, format, ...)    CcspTraceError((format, ##__VA_ARGS__))
 #define platform_trace_warning(module, format, ...)  CcspTraceWarning((format, ##__VA_ARGS__))
+#endif

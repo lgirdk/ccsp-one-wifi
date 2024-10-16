@@ -46,9 +46,7 @@ typedef void (* wifi_db_cleanup_fn_t)(void);
 typedef int (* wifi_db_init_tables_fn_t)(void);
 typedef void (* wifi_db_init_default_value_fn_t)(void);
 typedef int (* wifi_db_start_monitor_fn_t)(void);
-#ifdef DML_SUPPORT
 typedef int (* wifi_db_update_rfc_config_fn_t)(UINT rfc_id, wifi_rfc_dml_parameters_t *rfc_param);
-#endif
 typedef int (* wifi_db_init_global_config_default_fn_t)(wifi_global_param_t *config);
 typedef int (* wifi_db_init_radio_config_default_fn_t)(int radio_index,wifi_radio_operationParam_t *config, wifi_radio_feature_param_t *feat_config);
 typedef int (* wifi_db_init_vap_config_default_fn_t)(int vap_index, wifi_vap_info_t *config,
@@ -78,9 +76,7 @@ typedef struct {
     wifi_db_init_tables_fn_t                   init_tables_fn;
     wifi_db_init_default_value_fn_t            init_default_value_fn;
     wifi_db_start_monitor_fn_t                 start_monitor_fn;
-#ifdef DML_SUPPORT
     wifi_db_update_rfc_config_fn_t             update_rfc_config_fn;
-#endif
     wifi_db_init_global_config_default_fn_t    init_global_config_default_fn;
     wifi_db_init_radio_config_default_fn_t     init_radio_config_default_fn;
     wifi_db_init_vap_config_default_fn_t       init_vap_config_default_fn;

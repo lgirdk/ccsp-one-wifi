@@ -20,28 +20,20 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <sys/stat.h>
-#if DML_SUPPORT
-#include <syscfg/syscfg.h>
-#include "ansc_platform.h"
-#endif // DML_SUPPORT
 #include "wifi_hal.h"
 #include "wifi_ctrl.h"
 #include "wifi_mgr.h"
 #include "wifi_util.h"
-#if DML_SUPPORT
 #include "wifi_monitor.h"
-#endif // DML_SUPPORT
 #include "scheduler.h"
 #include <unistd.h>
 #include <pthread.h>
 #include "wifi_hal_rdk_framework.h"
 #include "wifi_passpoint.h"
-#if DML_SUPPORT
-#include "safec_lib_common.h"
+#include "wifi_stubs.h"
 
 #define NEIGHBOR_SCAN_RESULT_INTERVAL 40000 // 40 sec
 #define MAX_VAP_INDEX 24
-#endif // DML_SUPPORT
 
 #define CHAN_UTIL_INTERVAL_MS 900000 // 15 mins
 #define TELEMETRY_UPDATE_INTERVAL_MS 3600000 // 1 hour
@@ -49,9 +41,7 @@
 #define MAX_RESET_RADIO_PARAMS_RETRY_COUNTER  (5000 / 100)
 
 
-#if DML_SUPPORT
 static unsigned msg_id = 1000;
-#endif
 
 #define RADIO_INDEX_DFS 1
 unsigned int temp_ch_list_5g[] = {36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,144,149,153,157,161,165};
@@ -156,13 +146,11 @@ void process_auth_frame_event(frame_data_t *msg, uint32_t msg_length)
 
 void process_assoc_req_frame_event(frame_data_t *msg, uint32_t msg_length)
 {
-#if DML_SUPPORT
     wifi_monitor_data_t data;
     memset(&data, 0, sizeof(wifi_monitor_data_t));
     memcpy(&data.u.msg, msg, sizeof(frame_data_t));
     data.id = msg_id++;
     push_event_to_monitor_queue(&data,wifi_event_monitor_assoc_req,NULL);
-#endif
     wifi_util_dbg_print(WIFI_CTRL,"%s:%d wifi mgmt frame message: ap_index:%d length:%d type:%d dir:%d rssi:%d phy_rate:%d\r\n", __FUNCTION__, __LINE__, msg->frame.ap_index, msg->frame.len, msg->frame.type, msg->frame.dir, msg->frame.sig_dbm, msg->frame.phy_rate);
 }
 
@@ -192,7 +180,6 @@ void process_dpp_config_req_frame_event(frame_data_t *msg, uint32_t msg_length)
 }
 
 
-#if DML_SUPPORT
 static wifi_anqp_node_t* convert_frame_data_to_anqp(int ap_index, mac_address_t sta, unsigned char token, unsigned char *attrib, unsigned int len)
 {
     char macStr[MAC_STR_LEN];
@@ -682,7 +669,6 @@ void process_anqp_gas_init_frame_event(frame_data_t *msg, uint32_t msg_length)
         wifi_util_dbg_print(WIFI_CTRL, "%s:%d: ANQP Response Count for VAP %d is = %d \n", __func__,__LINE__, msg->frame.ap_index+1, rdk_vap_info->anqp_response_count);
     }
 }
-#endif // DML_SUPPORT
 
 void send_hotspot_status(char* vap_name, bool up)
 {
@@ -722,10 +708,8 @@ void process_xfinity_vaps(wifi_hotspot_action_t param, bool hs_evt)
     ctrl = (wifi_ctrl_t *)get_wifictrl_obj();
     wifi_platform_property_t *wifi_prop = (&(get_wifimgr_obj())->hal_cap.wifi_prop);
     uint8_t num_radios = getNumberRadios();
-#if DML_SUPPORT
     bool open_2g_enabled = false, open_5g_enabled = false, open_6g_enabled = false,sec_2g_enabled = false,sec_5g_enabled = false, sec_6g_enabled = false;
     wifi_rfc_dml_parameters_t *rfc_param = (wifi_rfc_dml_parameters_t *)get_wifi_db_rfc_parameters();
-#endif // DML_SUPPORT
 
     pub_svc = get_svc_by_type(ctrl, vap_svc_type_public);
     for(int radio_indx = 0; radio_indx < num_radios; ++radio_indx) {
@@ -751,7 +735,6 @@ void process_xfinity_vaps(wifi_hotspot_action_t param, bool hs_evt)
                 tmp_vap_map.vap_array[0].u.bss_info.enabled = false;
             }
             if (param == hotspot_vap_enable ) {
-#if DML_SUPPORT
                 if (rfc_param) {
                     open_2g_enabled = rfc_param->hotspot_open_2g_last_enabled;
                     open_5g_enabled = rfc_param->hotspot_open_5g_last_enabled;
@@ -781,9 +764,6 @@ void process_xfinity_vaps(wifi_hotspot_action_t param, bool hs_evt)
                     tmp_vap_map.vap_array[0].u.bss_info.enabled = true;
 
                 wifi_util_dbg_print(WIFI_CTRL,"enabled is %d\n",tmp_vap_map.vap_array[0].u.bss_info.enabled);
-#else
-                tmp_vap_map.vap_array[0].u.bss_info.enabled = true;
-#endif // DML_SUPPORT
             }
             if(pub_svc->update_fn(pub_svc,radio_indx, &tmp_vap_map, rdk_vap_info) != RETURN_OK) {
                 wifi_util_error_print(WIFI_CTRL, "%s:%d Unable to create vaps\n", __func__,__LINE__);
@@ -1336,14 +1316,12 @@ void process_greylist_mac_filter(void *data)
     unsigned int itr = 0, itrj = 0;
     int reason = 0;
     int vap_index = 0;
-#if DML_SUPPORT
     const char *wifi_health_log = "/rdklogs/logs/wifihealth.txt";
     char log_buf[1024] = {0};
     char time_str[20] = {0};
     time_t now;
     struct tm *time_info;
     bool greylist_client_added = false;
-#endif // DML_SUPPORT
 
     rdk_wifi_vap_info_t *rdk_vap_info = NULL;
     mac_address_t zero_mac = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -1426,12 +1404,9 @@ void process_greylist_mac_filter(void *data)
 
             snprintf(macfilterkey, sizeof(macfilterkey), "%s-%s", rdk_vap_info->vap_name, new_mac_str);
             get_wifidb_obj()->desc.update_wifi_macfilter_config_fn(macfilterkey, acl_entry, true);
-#if DML_SUPPORT
             greylist_client_added = true;
-#endif // DML_SUPPORT
         }
     }
-#if DML_SUPPORT
     //Add time and Mac address to wifihealth.txt
     if (greylist_client_added) {
         time(&now);
@@ -1442,7 +1417,6 @@ void process_greylist_mac_filter(void *data)
         write_to_file(wifi_health_log, log_buf);
         wifi_util_dbg_print(WIFI_CTRL,"%s",log_buf);
    }
-#endif // DML_SUPPORT
 }
 
 void process_wifi_host_sync()
@@ -1801,7 +1775,6 @@ void process_assoc_device_event(void *data)
     }
 }
 
-#if DML_SUPPORT
 void process_factory_reset_command(bool type)
 {
     wifi_mgr_t *p_wifi_mgr = get_wifimgr_obj();
@@ -2177,7 +2150,6 @@ void process_levl_rfc(bool type)
     get_wifidb_obj()->desc.update_rfc_config_fn(0, rfc_param);
     return;
 }
-#endif // DML_SUPPORT
 
 void process_wps_command_event(unsigned int vap_index)
 {
@@ -2869,7 +2841,6 @@ int get_neighbor_scan_results(void *arg)
 
 void process_neighbor_scan_command_event()
 {
-#if DML_SUPPORT
     wifi_monitor_t *monitor_param = (wifi_monitor_t *)get_wifi_monitor();
     wifi_ctrl_t *ctrl = (wifi_ctrl_t *)get_wifictrl_obj();
     wifi_event_route_t route;
@@ -2879,7 +2850,7 @@ void process_neighbor_scan_command_event()
         return;
     }
     
-    strcpy_s(monitor_param->neighbor_scan_cfg.DiagnosticsState, sizeof(monitor_param->neighbor_scan_cfg.DiagnosticsState) , "Requested");
+    get_stubs_descriptor()->strcpy_fn(monitor_param->neighbor_scan_cfg.DiagnosticsState, sizeof(monitor_param->neighbor_scan_cfg.DiagnosticsState), "Requested");
 
     wifi_monitor_data_t *data = (wifi_monitor_data_t *) malloc(sizeof(wifi_monitor_data_t));
     if (data == NULL) {
@@ -2910,7 +2881,6 @@ void process_neighbor_scan_command_event()
     free(data);
     scheduler_add_timer_task(ctrl->sched, FALSE, NULL, get_neighbor_scan_results, NULL,
                     NEIGHBOR_SCAN_RESULT_INTERVAL, 1, FALSE);
-#endif // DML_SUPPORT
 }
 
 int wifidb_vap_status_update(bool status)
@@ -3001,7 +2971,6 @@ static void process_monitor_init_command(void)
 {
     //request client diagnostic collection every 5 seconds
     //required by rapid reconnect detection
-#if DML_SUPPORT
     wifi_mgr_t *wifi_mgr = get_wifimgr_obj();
     unsigned int radio_index;
     unsigned int vapArrayIndex = 0;
@@ -3036,7 +3005,6 @@ static void process_monitor_init_command(void)
         }
     }
     free(data);
-#endif
 }
 
 void handle_command_event(wifi_ctrl_t *ctrl, void *data, unsigned int len, wifi_event_subtype_t subtype)
@@ -3046,7 +3014,6 @@ void handle_command_event(wifi_ctrl_t *ctrl, void *data, unsigned int len, wifi_
             process_active_gw_check_command(*(bool *)data);
             break;
 
-#if DML_SUPPORT
         case wifi_event_type_command_factory_reset:
             process_factory_reset_command(*(bool *)data);
             break;
@@ -3080,7 +3047,6 @@ void handle_command_event(wifi_ctrl_t *ctrl, void *data, unsigned int len, wifi_
         case wifi_event_type_twoG80211axEnable_rfc:
             process_twoG80211axEnable_rfc(*(bool *)data);
             break;
-#endif
         case wifi_event_type_command_kickmac:
             break;
 
@@ -3095,11 +3061,10 @@ void handle_command_event(wifi_ctrl_t *ctrl, void *data, unsigned int len, wifi_
             process_kick_assoc_devices_event(data);
             break;
 
-#if DML_SUPPORT
         case wifi_event_type_command_wps:
             process_wps_command_event(*(unsigned int *)data);
             break;
-#endif
+
         case wifi_event_type_command_wps_pin:
             process_wps_pin_command_event(data);
             break;
@@ -3140,11 +3105,10 @@ void handle_command_event(wifi_ctrl_t *ctrl, void *data, unsigned int len, wifi_
             marker_list_config_event((char *)data, txrx_rate_list_type);
             break;
 
-#if DML_SUPPORT
         case wifi_event_type_prefer_private_rfc:
             process_prefer_private_rfc(*(bool *)data);
             break;
-#endif
+
         case wifi_event_type_trigger_disconnection:
             process_sta_trigger_disconnection(*(unsigned int *)data);
             break;
@@ -3175,9 +3139,7 @@ void handle_command_event(wifi_ctrl_t *ctrl, void *data, unsigned int len, wifi_
             break;
     }
 
-#if DML_SUPPORT
     apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_command, subtype, data);
-#endif
 }
 
 void handle_hal_indication(wifi_ctrl_t *ctrl, void *data, unsigned int len, wifi_event_subtype_t subtype)
@@ -3220,11 +3182,9 @@ void handle_hal_indication(wifi_ctrl_t *ctrl, void *data, unsigned int len, wifi
             process_dpp_config_req_frame_event(data, len);
             break;
 
-#if DML_SUPPORT
         case wifi_event_hal_anqp_gas_init_frame:
             process_anqp_gas_init_frame_event(data, len);
             break;
-#endif // DML_SUPPORT
 
         case wifi_event_hal_sta_conn_status:
             process_sta_conn_status_event(data, len);
@@ -3256,9 +3216,7 @@ void handle_hal_indication(wifi_ctrl_t *ctrl, void *data, unsigned int len, wifi
             break;
     }
 
-#if DML_SUPPORT
     apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_hal_ind, subtype, data);
-#endif
 }
 
 void handle_webconfig_event(wifi_ctrl_t *ctrl, const char *raw, unsigned int len, wifi_event_subtype_t subtype)
@@ -3277,13 +3235,9 @@ void handle_webconfig_event(wifi_ctrl_t *ctrl, const char *raw, unsigned int len
         case wifi_event_webconfig_data_resched_to_ctrl_queue:
         case wifi_event_webconfig_set_data_force_apply:
             memcpy((unsigned char *)&data.u.decoded.hal_cap, (unsigned char *)&mgr->hal_cap, sizeof(wifi_hal_capability_t));
-#if DML_SUPPORT
             apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_webconfig, subtype, NULL);
-#endif
             webconfig_decode(config, &data, raw);
-#if DML_SUPPORT
             apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_webconfig, subtype, NULL);
-#endif
             wifi_event = (wifi_event_t *)malloc(sizeof(wifi_event_t));
             if (wifi_event != NULL) {
                 memset(wifi_event, 0, sizeof(wifi_event_t));
@@ -3323,9 +3277,7 @@ void handle_webconfig_event(wifi_ctrl_t *ctrl, const char *raw, unsigned int len
             break;
 
         case wifi_event_webconfig_data_req_from_dml:
-#if DML_SUPPORT
             apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_webconfig, subtype, NULL);
-#endif 
             ctrl->webconfig_state |= ctrl_webconfig_state_trigger_dml_thread_data_update_pending;
             break;
 

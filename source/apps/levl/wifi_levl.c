@@ -26,9 +26,7 @@
 #include "wifi_mgr.h"
 #include "wifi_util.h"
 #include "wifi_levl.h"
-#if DML_SUPPORT
 #include "wifi_analytics.h"
-#endif
 //#include <ieee80211.h>
 #include "common/ieee802_11_defs.h"
 #include <fcntl.h>
@@ -193,12 +191,10 @@ void update_probe_map(wifi_app_t *apps, char *mac_key)
     probe_req_elem_t *elem;
     hash_map_t *probe_map = apps->data.u.levl.probe_req_map;
     unsigned int max_probe_map_ttl_cnt = get_max_probe_ttl_cnt();
-#if DML_SUPPORT
     wifi_ctrl_t *ctrl = (wifi_ctrl_t *)get_wifictrl_obj();
     probe_ttl_data_t ttl_data;
 
     memset(&ttl_data, 0, sizeof(ttl_data));
-#endif
 
     if ((mac_key == NULL) || (probe_map == NULL)) {
         wifi_util_error_print(WIFI_APPS,"%s:%d mac str key or probe hash map is null\r\n", __func__, __LINE__);
@@ -210,11 +206,9 @@ void update_probe_map(wifi_app_t *apps, char *mac_key)
         elem->curr_time_alive++;
 
         if (elem->curr_time_alive > max_probe_map_ttl_cnt) {
-#if DML_SUPPORT
             ttl_data.max_probe_ttl_cnt = elem->curr_time_alive;
             strcpy(ttl_data.mac_str, mac_key);
             apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_hal_ind, wifi_event_hal_potential_misconfiguration, &ttl_data);
-#endif
 
             if (mac_key != NULL) {
                 elem = hash_map_remove(probe_map, mac_key);

@@ -32,11 +32,8 @@
 #define WIFI_INTERWORKING_CFG_FILE        "/nvram/passpoint/InterworkingCfg_%d.json"
 
 #include "collection.h"
-#if DML_SUPPORT
-#include "cosa_wifi_internal.h"
-#else
 #include "wifi_hal.h"
-#endif // DML_SUPPORT
+#include "ccsp.h"
 
 typedef struct {
     UCHAR apIndex;
@@ -90,10 +87,4 @@ INT WiFi_DefaultInterworkingConfig(uint8_t vapIndex);
 INT WiFi_WriteInterworkingConfig (uint8_t vapIndex);
 INT WiFi_InitInterworkingElement (uint8_t vapIndex);
 
-#if DML_SUPPORT
-typedef struct {
-    PCOSA_DATAMODEL_WIFI    wifi_dml;
-} wifi_passpoint_t;
-#endif // DML_SUPPORT
-        
 #endif //_WIFI_PASSPOINT_H

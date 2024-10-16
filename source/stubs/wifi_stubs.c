@@ -21,10 +21,13 @@
 #include <stdbool.h>
 #include "stdlib.h"
 #include <sys/time.h>
-#include "wifi_hal.h"
 #include "wifi_stubs.h"
+#include <string.h>
+#include "wifi_hal.h"
 
 #ifdef ONEWIFI_RDKB_APP_SUPPORT
+#include "safec_lib_common.h"
+
 extern int t2_event_d(char *marker, int value);
 extern int t2_event_s(char *marker, char *buff);
 extern int v_secure_system(const char *command);
@@ -32,6 +35,10 @@ extern bool drop_root();
 extern void gain_root_privilege();
 extern char * getDeviceMac();
 extern int onewifi_pktgen_uninit();
+static int strcpy_func(char *dst, size_t max, const char *src) {
+    strcpy_s(dst, max, src);
+    return 0;
+}
 #else
 static int t2_event_d(char *marker, int value)
 {
@@ -67,6 +74,12 @@ static int onewifi_pktgen_uninit()
 {
    return 0;
 }
+
+static int strcpy_func(char *dst, size_t max, const char *src)
+{
+    strncpy(dst, src, max);
+    return 0;
+}
 #endif
 
 wifi_stubs_descriptor_t stubs_desc = {
@@ -76,7 +89,8 @@ wifi_stubs_descriptor_t stubs_desc = {
     drop_root,
     gain_root_privilege,
     getDeviceMac,
-    onewifi_pktgen_uninit
+    onewifi_pktgen_uninit,
+    strcpy_func
 };
 
 wifi_stubs_descriptor_t *get_stubs_descriptor()

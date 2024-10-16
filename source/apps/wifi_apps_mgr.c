@@ -134,7 +134,7 @@ int apps_mgr_event(wifi_apps_mgr_t *apps_mgr, wifi_event_t *event)
 
 int apps_mgr_analytics_event(wifi_apps_mgr_t *apps_mgr, wifi_event_type_t type, wifi_event_subtype_t sub_type, void *arg)
 {
-#ifdef DML_SUPPORT
+#ifdef ONEWIFI_ANALYTICS_APP_SUPPORT
     wifi_app_t  *app = NULL;
     wifi_event_t *event;
 
@@ -253,7 +253,6 @@ int app_init(wifi_app_t *app, unsigned int create_flag)
     return RETURN_OK;
 }
 
-#ifdef CCSP_DML_SUPPORT
 int update_rfc_params(wifi_app_descriptor_t *descriptor)
 {
     if (descriptor == NULL) {
@@ -273,7 +272,6 @@ int update_rfc_params(wifi_app_descriptor_t *descriptor)
     }
     return 0;
 }
-#endif //CCSP_DML_SUPPORT
 
 int app_register(wifi_apps_mgr_t *apps_mgr, wifi_app_descriptor_t *descriptor)
 {
@@ -283,9 +281,7 @@ int app_register(wifi_apps_mgr_t *apps_mgr, wifi_app_descriptor_t *descriptor)
     if ((app = get_app_by_inst(apps_mgr, descriptor->inst)) != NULL) {
         return RETURN_OK;
     }
-#ifdef CCSP_DML_SUPPORT
     update_rfc_params(descriptor);
-#endif //CCSP_DML_SUPPORT
     app = (wifi_app_t *)malloc(sizeof(wifi_app_t));
     memset(app, 0, sizeof(wifi_app_t));
     app->ctrl = apps_mgr->ctrl;

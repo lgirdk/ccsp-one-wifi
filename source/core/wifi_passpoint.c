@@ -18,30 +18,19 @@
 **************************************************************************/
 
 #include "webconfig_framework.h"
-#if DML_SUPPORT
 #include "wifi_data_plane.h"
 #include "wifi_monitor.h"
 #include "plugin_main_apis.h"
-#else
-#include "wifi_passpoint.h"
-#include "wifi_data_plane_types.h"
-#endif // DML_SUPPORT
 #include <sys/socket.h>
 #include <sys/sysinfo.h>
 #include <sys/un.h>
 #include <assert.h>
-#if DML_SUPPORT
 #include <sysevent/sysevent.h>
-#endif // DML_SUPPORT
 #include <cjson/cJSON.h>
 #include <dirent.h>
 #include <errno.h>
 #include "wifi_ctrl.h"
 #include "wifi_util.h"//ONE_WIFI
-
-#if !(DML_SUPPORT)
-#include "log.h"
-#endif // DML_SUPPORT
 
 #define GAS_CFG_TYPE_SUPPORTED 1
 #define GAS_STATS_FIXED_WINDOW_SIZE 10
@@ -61,7 +50,6 @@ wifi_GASConfiguration_t g_gas_config;
 
 wifi_vap_info_map_t g_vap_maps[2];
 
-#if DML_SUPPORT
 #ifndef FEATURE_SUPPORT_PASSPOINT
 static long readFileToBuffer(const char *fileName, char **buffer)
 {
@@ -121,8 +109,6 @@ static long readFileToBuffer(const char *fileName, char **buffer)
     return numbytes;
 }
 #endif
-#endif // DML_SUPPORT
-
 
 void process_passpoint_timeout()
 {
@@ -1227,74 +1213,6 @@ INT WiFi_SaveHS2Cfg(uint8_t vapIndex)
     }
 }
 
-#if DML_SUPPORT
-#if 0
-//INT CosaDmlWiFi_InitHS2Config(PCOSA_DML_WIFI_AP_CFG pCfg_t)
-INT WiFi_InitHS2Config(uint8_t vapIndex)
-{
-    char cfgFile[64];
-    char *JSON_STR = NULL;
-    int apIns = 0;
-    long confSize = 0;
-#if 0 
-    if(!pCfg){
-        wifi_util_dbg_print(WIFI_PASSPOINT,"AP Context is NULL\n");
-        return RETURN_ERR;
-    }
-#else
-    UINT radio_index = 0;
-    UINT vap_index = 0; //ONE_WIFI //Temporary static value
-    wifi_interworking_t *pCfg = Get_wifi_object_interworking_parameter(radio_index, vap_index);
-#endif//ONE_WIFI
-#if 0
-    pCfg->IEEE80211uCfg.PasspointCfg.HS2Parameters = NULL;
-    apIns = pCfg->InstanceNumber;
-    if((apIns < 1) || (apIns > 16)){
-        wifi_util_dbg_print(WIFI_PASSPOINT, "%s:%d: Invalid AP Index. Return\n", __func__, __LINE__);
-        return RETURN_ERR;
-    }
-   
-    //Set Default DGAF value to true
-    pCfg->IEEE80211uCfg.PasspointCfg.gafDisable = true;
-#else
-    memset(pCfg->passpoint.hs2Parameters, 0, sizeof(pCfg->passpoint.hs2Parameters));
-    apIns = (radio_index * MAX_NUM_VAP_PER_RADIO) + vap_index;
-    if((apIns < 1) || (apIns > 16)){
-        wifi_util_dbg_print(WIFI_PASSPOINT, "%s:%d: Invalid AP Index. Return\n", __func__, __LINE__);
-        return RETURN_ERR;
-    }
-   
-    //Set Default DGAF value to true
-    pCfg->passpoint.gafDisable = true;
-
-#endif//ONE_WIFI
-    sprintf(cfgFile,"%s.%d",WIFI_PASSPOINT_HS2_CFG_FILE,apIns);
-    
-    confSize = readFileToBuffer(cfgFile,&JSON_STR);
-    
-    if(!confSize || !JSON_STR || (RETURN_OK != WiFi_SetHS2Config(vapIndex, JSON_STR))){
-        if(JSON_STR){
-            free(JSON_STR);
-            JSON_STR = NULL;
-        }
-        wifi_util_dbg_print(WIFI_PASSPOINT,"Failed to Initialize HS2.0 Configuration from memory for AP: %d. Setting Default\n",apIns);
-#if 0
-	pCfg->IEEE80211uCfg.PasspointCfg.HS2Parameters = NULL;
-#else
-        memset(pCfg->passpoint.hs2Parameters, 0, sizeof(pCfg->passpoint.hs2Parameters));
-#endif//ONE_WIFI
-    } else {
-        wifi_util_dbg_print(WIFI_PASSPOINT,"Initialized HS2.0 Configuration from memory for AP: %d.\n",apIns);
-       // pCfg->IEEE80211uCfg.PasspointCfg.HS2Parameters = JSON_STR;
-          strcpy(pCfg->passpoint.hs2Parameters, JSON_STR);//ONE_WIFI
-
-    }
-
-    return RETURN_OK;
-}
-#endif//ONE_WIFI
-#endif // DML_SUPPORT
-
 INT WiFi_GetWANMetrics(uint8_t vapIndex, char *WANMetrics, UINT WANMetrics_length)
 {
     cJSON *mainEntry = NULL;
@@ -1411,74 +1329,6 @@ void WiFi_GetHS2Stats(uint8_t vapIndex)
     return;
 }
 
-#if DML_SUPPORT
-#if 0
-//INT CosaDmlWiFi_RestoreAPInterworking (int apIndex)
-INT WiFi_RestoreAPInterworking (int apIndex)
-{
-#if defined (FEATURE_SUPPORT_PASSPOINT)
-    //PCOSA_DML_WIFI_AP_CFG pCfg; 
-    if((apIndex < 0) || (apIndex> 15)){
-        wifi_util_dbg_print(WIFI_PASSPOINT, "%s:%d: Invalid AP Index: %d.\n", __func__, __LINE__,apIndex);
-        return RETURN_ERR;
-    }
-
-#if 0
-    pCfg = find_ap_wifi_dml(apIndex);
-  
-    if (pCfg == NULL)
-    {
-        return RETURN_ERR;
-    }
-#else
-    uint8_t radio_index = 0;
-    uint8_t vap_index = 0;
-    
-    get_vap_and_radio_index_from_vap_instance(apIndex, &radio_index, &vap_index);
-    wifi_interworking_t *pCfg = Get_wifi_object_interworking_parameter(radio_index, vap_index);
-#endif //ONE_WIFI 
-
-#if 0
-    if(!pCfg->InterworkingEnable){
-        wifi_util_dbg_print(WIFI_PASSPOINT, "%s:%d: Interworking is disabled on AP: %d. Returning Success\n", __func__, __LINE__, apIndex);
-        return RETURN_OK;
-    }
-#else
-    if(!pCfg->interworking.interworkingEnabled){
-        wifi_util_dbg_print(WIFI_PASSPOINT, "%s:%d: Interworking is disabled on AP: %d. Returning Success\n", __func__, __LINE__, apIndex);
-        return RETURN_OK;
-    }
-#endif//ONE_WIFI
-
-#if 0
-    if ((CosaDmlWiFi_ApplyInterworkingElement(pCfg)) != RETURN_OK)
-    {
-        wifi_util_dbg_print(WIFI_PASSPOINT, "%s:%d: CosaDmlWiFi_ApplyInterworkingElement Failed.\n", __func__, __LINE__);
-    }
-  
-    if(RETURN_OK != CosaDmlWiFi_ApplyRoamingConsortiumElement(pCfg)){
-        wifi_util_dbg_print(WIFI_PASSPOINT, "%s:%d: CosaDmlWiFi_ApplyRoamingConsortiumElement Failed.\n", __func__, __LINE__);
-    }
-#else
-    // this implementation is remaining
-    //TBD
-#endif//ONE_WIFI
-
-    if ((g_interworking_data[apIndex].passpoint.enable) && (RETURN_OK != enablePassPointSettings (apIndex, g_interworking_data[apIndex].passpoint.enable, g_interworking_data[apIndex].passpoint.gafDisable, g_interworking_data[apIndex].passpoint.p2pDisable, g_interworking_data[apIndex].passpoint.l2tif))){
-      wifi_util_dbg_print(WIFI_PASSPOINT, "%s:%d: Error Setting Passpoint Enable Status on AP: %d\n", __func__, __LINE__,apIndex);
-      return RETURN_ERR;
-    }
-    //pCfg->IEEE80211uCfg.PasspointCfg.Status = g_interworking_data[apIndex].passpoint.enable;//TBD -N
-    pCfg->passpoint.enable = g_interworking_data[apIndex].passpoint.enable;//ONE_WIFI
-    wifi_util_dbg_print(WIFI_PASSPOINT, "%s:%d: Set Passpoint Enable Status on AP: %d\n", __func__, __LINE__,apIndex);
-#else
-    UNREFERENCED_PARAMETER(apIndex);
-#endif
-    return RETURN_OK;
-}
-#endif//ONE_WIFI TBD -N
-#endif // DML_SUPPORT
-
 INT WiFi_SaveInterworkingWebconfig( wifi_interworking_t *interworking_data, int apIns)
 {
 #if defined (FEATURE_SUPPORT_PASSPOINT)
@@ -1527,198 +1377,6 @@ INT WiFi_SaveInterworkingWebconfig( wifi_interworking_t *interworking_data, int 
     return RETURN_OK;
 }
 
-#if DML_SUPPORT
-#if 0
-/***********************************************************************
-Funtion     : CosaDmlWiFi_ReadInterworkingConfig
-Input       : Pointer to vAP object, JSON String
-Description : Parses JSON String JSON_STR, and populates the vAP object pCfg 
-***********************************************************************/
-INT CosaDmlWiFi_ReadInterworkingConfig (PCOSA_DML_WIFI_AP_CFG pCfg, char *JSON_STR)
-{
-    if(!pCfg){
-        wifi_util_dbg_print(WIFI_PASSPOINT,"AP Context is NULL\n");
-        return RETURN_ERR;
-    }
-
-    int apIns = pCfg->InstanceNumber -1;
-    if((apIns < 0) || (apIns > 15)){
-        wifi_util_dbg_print(WIFI_PASSPOINT, "%s:%d: Invalid AP Index. Setting to 1\n", __func__, __LINE__);
-        apIns = 0;
-    }
-
-    cJSON *mainEntry = NULL;
-    cJSON *InterworkingElement = NULL;
-    cJSON *venueParam = NULL;
-
-    if(!JSON_STR){
-        wifi_util_dbg_print(WIFI_PASSPOINT,"JSON String is NULL\n");
-        return RETURN_ERR;
-    }
-
-    cJSON *interworkingCfg = cJSON_Parse(JSON_STR);
-
-    if (NULL == interworkingCfg) {
-        wifi_util_dbg_print(WIFI_PASSPOINT,"Failed to parse JSON\n");
-        return RETURN_ERR;
-    }
-
-    mainEntry = cJSON_GetObjectItem(interworkingCfg,"Interworking");
-    if(NULL == mainEntry){
-        wifi_util_dbg_print(WIFI_PASSPOINT,"Interworking entry is NULL\n");
-        cJSON_Delete(interworkingCfg);
-        return RETURN_ERR;
-    }
-
-//Interworking Status
-    InterworkingElement = cJSON_GetObjectItem(mainEntry,"InterworkingEnable");
-    pCfg->InterworkingEnable = InterworkingElement ? InterworkingElement->valuedouble : 0;
-
-//AccessNetworkType
-    InterworkingElement = cJSON_GetObjectItem(mainEntry,"AccessNetworkType");
-    if ( (pCfg->InstanceNumber == 5) || (pCfg->InstanceNumber == 6) || (pCfg->InstanceNumber == 9) || (pCfg->InstanceNumber == 10) )        //Xfinity hotspot vaps
-    {
-        pCfg->IEEE80211uCfg.IntwrkCfg.iAccessNetworkType = InterworkingElement ? InterworkingElement->valuedouble :2;
-    } else {
-        pCfg->IEEE80211uCfg.IntwrkCfg.iAccessNetworkType = InterworkingElement ? InterworkingElement->valuedouble :0;
-    }
-
-//ASRA
-    InterworkingElement = cJSON_GetObjectItem(mainEntry,"ASRA");
-    pCfg->IEEE80211uCfg.IntwrkCfg.iASRA = InterworkingElement ? InterworkingElement->valuedouble : 0;
-
-//ESR
-    InterworkingElement = cJSON_GetObjectItem(mainEntry,"ESR");
-    pCfg->IEEE80211uCfg.IntwrkCfg.iESR = InterworkingElement ? InterworkingElement->valuedouble : 0;
-
-//UESA
-    InterworkingElement = cJSON_GetObjectItem(mainEntry,"UESA");
-    pCfg->IEEE80211uCfg.IntwrkCfg.iUESA = InterworkingElement ? InterworkingElement->valuedouble : 0;
-
-//HESSOptionPresent
-    InterworkingElement = cJSON_GetObjectItem(mainEntry,"HESSOptionPresent");
-    pCfg->IEEE80211uCfg.IntwrkCfg.iHESSOptionPresent = InterworkingElement ? InterworkingElement->valuedouble : 0;
-        
-//HESSID
-    InterworkingElement = cJSON_GetObjectItem(mainEntry,"HESSID");
-    if(InterworkingElement && InterworkingElement->valuestring){
-        copy_string(pCfg->IEEE80211uCfg.IntwrkCfg.iHESSID, InterworkingElement->valuestring);
-    } else {
-        copy_string(pCfg->IEEE80211uCfg.IntwrkCfg.iHESSID, "11:22:33:44:55:66");
-    }
-
-//VenueOptionPresent
-    InterworkingElement = cJSON_GetObjectItem(mainEntry,"VenueOptionPresent");
-    pCfg->IEEE80211uCfg.IntwrkCfg.iVenueOptionPresent = InterworkingElement ? InterworkingElement->valuedouble : 0;
-
-//Venue
-    InterworkingElement = cJSON_GetObjectItem(mainEntry,"Venue");
-    if (InterworkingElement){
-        //VenueGroup
-        venueParam = cJSON_GetObjectItem(InterworkingElement,"VenueGroup");
-        pCfg->IEEE80211uCfg.IntwrkCfg.iVenueGroup = venueParam ? venueParam->valuedouble : 0;
-
-        //VenueType
-        venueParam = cJSON_GetObjectItem(InterworkingElement,"VenueType");
-        pCfg->IEEE80211uCfg.IntwrkCfg.iVenueType = venueParam ? venueParam->valuedouble : 0;
-    }
-    cJSON_Delete(interworkingCfg);
-    return RETURN_OK;
-}
-
-/***********************************************************************
-Funtion     : CosaDmlWiFi_SaveInterworkingConfig
-Input       : Pointer to vAP object, JSON String, length of string
-Description : Saves Interworking coinfiguration as JSON String into file.
-              File is saved for each vap in format InterworkingCfg_<apIns>.json
-***********************************************************************/
-INT CosaDmlWiFi_SaveInterworkingCfg(PCOSA_DML_WIFI_AP_CFG pCfg, char *buffer, int len)
-{   
-    char cfgFile[64];
-    DIR     *passPointDir = NULL;
-    int apIns = 0;
-    
-    passPointDir = opendir(WIFI_PASSPOINT_DIR);
-    if(passPointDir){
-        closedir(passPointDir);
-    }else if(ENOENT == errno){
-        if(0 != mkdir(WIFI_PASSPOINT_DIR, 0777)){ 
-            wifi_util_dbg_print(WIFI_PASSPOINT,"Failed to Create Passpoint Configuration directory.\n");
-            return RETURN_ERR;
-        }
-    }else{
-        wifi_util_dbg_print(WIFI_PASSPOINT,"Error opening Passpoint Configuration directory.\n");
-        return RETURN_ERR;
-    }
-    
-    if(!pCfg){
-        wifi_util_dbg_print(WIFI_PASSPOINT,"AP Context is NULL\n");
-        return RETURN_ERR;
-    }
-    apIns = pCfg->InstanceNumber;
-    sprintf(cfgFile,WIFI_INTERWORKING_CFG_FILE,apIns);
-    FILE *fPasspointCfg = fopen(cfgFile, "w");
-    if(0 == fwrite(buffer, len,1, fPasspointCfg)){
-        fclose(fPasspointCfg);
-        return RETURN_ERR;
-    }else{
-        fclose(fPasspointCfg);
-        return RETURN_OK;
-    }
-}
-
-/***********************************************************************
-Funtion     : CosaDmlWiFi_WriteInterworkingConfig
-Input       : Pointer to vAP object
-Description : Convert Interworking parameters to JSON String JSON_STR, 
-              and pass it to CosaDmlWiFi_SaveInterworkingCfg for persistent
-              storage
-***********************************************************************/
-INT CosaDmlWiFi_WriteInterworkingConfig (PCOSA_DML_WIFI_AP_CFG pCfg)
-{
-    cJSON *mainEntry = NULL;
-    cJSON *venueEntry = NULL;
-    char JSON_STR[2048];
-    int apIns;
-    
-    if(!pCfg){
-        wifi_util_dbg_print(WIFI_PASSPOINT,"AP Context is NULL\n");
-        return RETURN_ERR;
-    }
-    
-    apIns = pCfg->InstanceNumber;
-    if((apIns < 1) || (apIns > 16)){
-        return RETURN_ERR;
-    }
-    
-    cJSON *interworkingCfg = cJSON_CreateObject();
-    if (NULL == interworkingCfg) {
-        wifi_util_dbg_print(WIFI_PASSPOINT,"Failed to create JSON\n");
-        return RETURN_ERR;
-    }
-    
-    memset(JSON_STR, 0, sizeof(JSON_STR));
-
-    mainEntry = cJSON_AddObjectToObject(interworkingCfg,"Interworking");
-    
-    cJSON_AddNumberToObject(mainEntry,"InterworkingEnable",pCfg->InterworkingEnable); 
-    cJSON_AddNumberToObject(mainEntry,"AccessNetworkType",pCfg->IEEE80211uCfg.IntwrkCfg.iAccessNetworkType); 
-    cJSON_AddNumberToObject(mainEntry,"ASRA",pCfg->IEEE80211uCfg.IntwrkCfg.iASRA); 
-    cJSON_AddNumberToObject(mainEntry,"ESR",pCfg->IEEE80211uCfg.IntwrkCfg.iESR); 
-    cJSON_AddNumberToObject(mainEntry,"UESA",pCfg->IEEE80211uCfg.IntwrkCfg.iUESA); 
-    cJSON_AddNumberToObject(mainEntry,"HESSOptionPresent",pCfg->IEEE80211uCfg.IntwrkCfg.iHESSOptionPresent); 
-    cJSON_AddStringToObject(mainEntry, "HESSID", pCfg->IEEE80211uCfg.IntwrkCfg.iHESSID);
-    venueEntry = cJSON_AddObjectToObject(mainEntry,"Venue");
-    cJSON_AddNumberToObject(venueEntry,"VenueGroup",pCfg->IEEE80211uCfg.IntwrkCfg.iVenueGroup); 
-    cJSON_AddNumberToObject(venueEntry,"VenueType",pCfg->IEEE80211uCfg.IntwrkCfg.iVenueType); 
-    
-    cJSON_PrintPreallocated(interworkingCfg, JSON_STR, sizeof(JSON_STR),false);
-    cJSON_Delete(interworkingCfg);
- 
-    return CosaDmlWiFi_SaveInterworkingCfg(pCfg, JSON_STR, sizeof(JSON_STR));
-}
-#endif //TBD -N
-#endif // DML_SUPPORT
 /***********************************************************************
 Funtion     : CosaDmlWiFi_DefaultInterworkingConfig
 Input       : Pointer to vAP object

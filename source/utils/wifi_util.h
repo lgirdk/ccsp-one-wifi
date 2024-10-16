@@ -30,7 +30,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/prctl.h>
-#include "wifi_base.h"
+#include "bus.h"
+#include "ccsp.h"
 
 #ifdef __cplusplus
 extern "C" {

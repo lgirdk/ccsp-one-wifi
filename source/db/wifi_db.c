@@ -35,7 +35,10 @@ extern int get_wifi_global_param(wifi_global_param_t *config);
 #else
 void init_wifidb(void)
 {
+    init_wifidb_data();
 
+    /* Set Wifi Global Parameters */
+    init_wifi_global_config();
 }
 
 #define OFFCHAN_DEFAULT_TSCAN_IN_MSEC 63
@@ -599,12 +602,10 @@ int start_wifidb_monitor()
 {
     return 0;
 }
-#ifdef DML_SUPPORT
 int wifidb_update_rfc_config(UINT rfc_id, wifi_rfc_dml_parameters_t *rfc_param)
 {
     return 0;
 }
-#endif
 
 int wifidb_init_global_config_default(wifi_global_param_t *config)
 {
@@ -695,9 +696,7 @@ void wifidb_init(wifi_db_t *db)
     db->desc.init_tables_fn = init_wifidb_tables;
     db->desc.init_default_value_fn = wifidb_init_default_value;
     db->desc.start_monitor_fn = start_wifidb_monitor;
-#ifdef DML_SUPPORT
     db->desc.update_rfc_config_fn = wifidb_update_rfc_config;
-#endif
     db->desc.init_global_config_default_fn = wifidb_init_global_config_default;
     db->desc.init_radio_config_default_fn = wifidb_init_radio_config_default;
     db->desc.init_vap_config_default_fn = wifidb_init_vap_config_default;

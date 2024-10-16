@@ -25,22 +25,22 @@ extern "C" {
 #endif
 
 #include <pthread.h>
-#if DML_SUPPORT
-#include "ssp_main.h"
-#endif // DML_SUPPORT
 #include "wifi_base.h"
 #include "wifi_db.h"
-#if DML_SUPPORT
-#endif // DML_SUPPORT
 #include "wifi_ctrl.h"
 #include "platform_common.h"
+#include "wifi_dml.h"
 
 #define WIFI_PSM_DB_NAMESPACE         "Device.DeviceInfo.X_RDKCENTRAL-COM_RFC.Feature.WiFi-PSM-DB.Enable"
 #define LAST_REBOOT_REASON_NAMESPACE  "Device.DeviceInfo.X_RDKCENTRAL-COM_LastRebootReason"
 #define INACTIVE_FIRMWARE_NAMESPACE   "Device.DeviceInfo.X_RDKCENTRAL-COM_InActiveFirmware"
 
+wifi_ccsp_t *get_wificcsp_obj(void);
+
 typedef struct {
     wifi_db_t                       wifidb;
+    wifi_ccsp_t                     wifi_ccsp;
+    wifi_dml_t                      wifidml;
     pthread_mutex_t                 data_cache_lock;
     pthread_mutex_t                 lock;
     wifi_ctrl_t                     ctrl;
@@ -54,22 +54,12 @@ typedef struct {
     hash_map_t                      *steering_config_map;
     hash_map_t                      *steering_client_map;
     hash_map_t                      *vif_neighbors_map;
-#if DML_SUPPORT
-    wifi_ssp_t                      ssp;
     wifi_dml_parameters_t           dml_parameters;
     wifi_rfc_dml_parameters_t       rfc_dml_parameters;
-    struct {
-        pthread_cond_t cv;
-        bool condition;
-    }                               dml_init_status;
-#endif // DML_SUPPORT
     int                             db_version;
 } wifi_mgr_t;
 
 wifi_mgr_t *get_wifimgr_obj();
-#if DML_SUPPORT
-char* Get_PSM_Record_Status(char *recName, char *strValue);
-#endif // DML_SUPPORT
 #ifdef __cplusplus
 }
 #endif

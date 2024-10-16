@@ -977,9 +977,7 @@ static int process_sta_webconfig_set_data_sta_bssid(wifi_service_node_t *node, w
         candidate->external_ap.ssid, channel, candidate->external_ap.freq,
         candidate->radio_freq_band, ext_conn_state_to_str(ext->conn_state));
 
-#if DML_SUPPORT
-        apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_command, wifi_event_type_new_bssid, ext);
-#endif
+    apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_command, wifi_event_type_new_bssid, ext);
 
     // Channel change for connected STA may fail therefore need to re-apply it on disconnection.
     // For example, STA is connected to 2.4 GHz. Optimization for extender is 1->11, 2.4 Ghz->5 Ghz.
@@ -1203,9 +1201,7 @@ static void process_ext_trigger_disconnection(wifi_service_node_t *node, wifi_co
         return;
     }
 
-#if DML_SUPPORT
     apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_command, wifi_event_type_trigger_disconnection_analytics, ext);
-#endif
 
     wifi_util_info_print(WIFI_SERVICES, "%s:%d execute sta disconnect for vap index: %d\n", __func__,
         __LINE__, ext->connected_vap_index);
@@ -1650,9 +1646,7 @@ int process_ext_webconfig_set_data_sta_bssid(wifi_service_node_t *node, wifi_cor
         candidate->external_ap.ssid, channel, candidate->external_ap.freq,
         candidate->radio_freq_band, ext_conn_state_to_str(ext->conn_state));
 
-#if DML_SUPPORT
-        apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_command, wifi_event_type_new_bssid, ext);
-#endif
+    apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_command, wifi_event_type_new_bssid, ext);
 
     // Channel change for connected STA may fail therefore need to re-apply it on disconnection.
     // For example, STA is connected to 2.4 GHz. Optimization for extender is 1->11, 2.4 Ghz->5 Ghz.

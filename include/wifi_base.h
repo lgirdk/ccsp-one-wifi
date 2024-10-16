@@ -24,10 +24,10 @@
 extern "C" {
 #endif
 
-#include "wifi_hal.h"
 #include "collection.h"
 #include <pthread.h>
 #include <sys/time.h>
+#include "wifi_hal.h"
 
 #define WIFI_STA_2G_VAP_CONNECT_STATUS      "Device.WiFi.STA.1.Connection.Status"
 #define WIFI_STA_5G_VAP_CONNECT_STATUS      "Device.WiFi.STA.2.Connection.Status"
@@ -372,7 +372,6 @@ typedef struct {
     int levl_publish_interval;
 }levl_config_t;
 
-#if DML_SUPPORT
 typedef struct {
     int rssi_threshold;
     bool ReconnectCountEnable[MAX_VAP];
@@ -419,7 +418,6 @@ typedef struct {
     bool greylist_enabled_rfc;
     bool cac_enabled_rfc;
 } wifi_rfc_dml_parameters_t;
-#endif
 
 typedef struct {
     bool notify_wifi_changes;

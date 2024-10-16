@@ -45,7 +45,6 @@
 #include <assert.h>
 #include "collection.h"
 #include "wifi_ovsdb.h"
-#include "ccsp_base_api.h"
 //This is a dummy string if the value is not passed.
 #define INVALID_KEY "12345678"
 int ovsdb_get_factory_reset_data(bool *data)
