@@ -140,14 +140,28 @@ bus_error_t bus_add_table_row(elem_node_map_t *table_root, unsigned int num_of_t
     return bus_error_success;
 }
 
-elem_node_map_t* link_tables_with_node(elem_node_map_t* parent_node)
+static bool is_string_digit(const char *str)
+{
+    if (str == NULL || *str == '\0') {
+        return 0;
+    }
+
+    for (int i = 0; str[i] != '\0'; i++) {
+        if (str[i] < '0' || str[i] > '9') {
+            return false;
+        }
+    }
+    return true;
+}
+
+static elem_node_map_t* link_tables_with_node(elem_node_map_t* parent_node)
 {
     VERIFY_NULL_WITH_RETURN_ADDR(parent_node);
 
     elem_node_map_t* child_node_reference = parent_node->child;
     elem_node_map_t* next_node = parent_node->nextSibling;
     while(next_node) {
-        if (next_node->child == NULL) {
+        if (next_node->child == NULL && is_string_digit(next_node->name)) {
             next_node->child = child_node_reference;
             next_node->reference_childs = reference_child_node;
             wifi_util_dbg_print(WIFI_BUS,"%s:%d Added duplicate node ref for=%s\r\n", __func__,
@@ -189,7 +203,7 @@ static void duplicate_node_ref(elem_node_map_t* child_table_node, elem_node_map_
     }
 }
 
-bool is_grandparent_node_elem_is_table(elem_node_map_t* cur_parent)
+static bool is_grandparent_node_elem_is_table(elem_node_map_t* cur_parent)
 {
     elem_node_map_t* grandparent_node = ((cur_parent != NULL) ? cur_parent->parent : NULL);
     if (grandparent_node && grandparent_node->type == bus_element_type_table) {
@@ -263,6 +277,10 @@ elem_node_map_t* bus_insert_elem_node(elem_node_map_t* root, bus_mux_data_elem_t
                 current_node = temp_node;
                 next_node = current_node->child;
                 create_child = 1;
+                if (is_grandparent_node_elem_is_table(current_node->parent)) {
+                    // Link tables with new node.
+                    link_tables_with_node(current_node->parent);
+                }
             }
         }
         while(next_node != NULL)
@@ -529,14 +547,19 @@ static void node_elem_traversal(elem_node_map_t* node, node_elem_traversal_arg_t
     elem_node_map_t* parent = node->parent;
     elem_node_map_t* child  = node->child;
 
-    while(child)
-    {
-        elem_node_map_t* tmp = child;
-        child = child->nextSibling;
-        node_elem_recurse_traversal(tmp, input_action);
+    if (node->reference_childs != reference_child_node) {
+        while(child)
+        {
+            elem_node_map_t* tmp = child;
+            child = child->nextSibling;
+            node_elem_recurse_traversal(tmp, input_action);
+        }
+    } else {
+        wifi_util_info_print(WIFI_BUS,"%s:%d mirror link node found [%p]->child:%p\r\n", __func__,
+            __LINE__, node, node->child);
     }
 
-    if(parent)
+    if (parent)
     {
         if(parent->child == node)
         {
@@ -591,6 +614,67 @@ bus_error_t free_node_elems(elem_node_map_t *node)
 
     BUS_MUX_UNLOCK(get_bus_mux_mutex());
     return bus_error_success;
+}
+
+char const* get_type_string(bus_element_type_t type)
+{
+    switch(type)
+    {
+        case bus_element_type_property:
+            return "property";
+        case bus_element_type_table:
+            return "table";
+        case bus_element_type_event:
+            return "event";
+        case bus_element_type_method:
+            return "method";
+        default:
+            return "object";
+    }
+}
+
+static void print_elem(elem_node_map_t *node, int level)
+{
+    wifi_util_dbg_print(WIFI_BUS,"%*s[name:%s type:%s full_name: %s addr:%p, parent:%p, child:%p]\n",
+        level*2, level ? " " : "",
+        node->name,
+        get_type_string(node->type),
+        node->full_name,
+        node,
+        node->parent,
+        node->child);
+
+    bus_mux_reg_node_data_t *reg_node_data = (bus_mux_reg_node_data_t *)node->node_elem_data;
+    if ((node->node_data_type == node_elem_reg_data) && (reg_node_data != NULL)) {
+        bus_callback_table_t *p_cb_table = &reg_node_data->cb_table;
+        wifi_util_dbg_print(WIFI_BUS,"[full_name: %s get_cb:%p set_cb:%p add_cb:%p remove:%p event:%p method:%p]\n",
+            node->full_name, p_cb_table->get_handler, p_cb_table->set_handler, p_cb_table->table_add_row_handler,
+            p_cb_table->table_remove_row_handler, p_cb_table->event_sub_handler, p_cb_table->method_handler);
+    } else {
+        wifi_util_dbg_print(WIFI_BUS,"[cb:%d not found full_name: %s cb_pointer:%p]\n",
+            node->node_data_type, node->full_name, reg_node_data);
+    }
+}
+
+void print_registered_elems(elem_node_map_t *root, int level)
+{
+    elem_node_map_t *child   = root;
+    elem_node_map_t *sibling = NULL;
+
+    if(child) {
+        print_elem(child, level);
+        if(child->child) {
+            print_registered_elems(child->child, level+1);
+        }
+        sibling = child->nextSibling;
+        while(sibling) {
+            print_elem(sibling, level);
+            if(sibling->child) {
+                print_registered_elems(sibling->child, level+1);
+            }
+            sibling = sibling->nextSibling;
+        }
+    }
 }
 
 bus_error_t bus_table_remove_row(elem_node_map_t *p_root_node, char *p_name_space)

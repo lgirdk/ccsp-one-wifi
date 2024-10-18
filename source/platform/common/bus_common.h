@@ -63,7 +63,8 @@ extern "C" {
     } while (0)
 
 #define BUS_SERVER_PROCESS_NAME     "OneWifi"
-#define BUS_MAX_NAME_LENGTH         104
+#define BUS_MAX_NAME_LENGTH         128
+#define BUS_NODE_NAME               80
 #define ZERO_TABLE                  0
 #define UNREFERENCED_PARAMETER(_p_) (void)(_p_)
 
@@ -332,7 +333,7 @@ typedef struct bus_mux_sub_node_data {
 
 typedef struct elem_node_map
 {
-    char                     name[32];
+    char                     name[BUS_NODE_NAME];
     bus_name_string_t        full_name;
     bus_element_type_t       type;
     node_elem_data_type_t    node_data_type;
@@ -373,6 +374,7 @@ bus_error_t bus_remove_all_elems(elem_node_map_t *root);
 elem_node_map_t *get_bus_node_info(elem_node_map_t *cb_root, char *name);
 bus_error_t bus_table_add_row(elem_node_map_t *p_root_node, char *name_space, uint32_t table_index);
 bus_error_t bus_table_remove_row(elem_node_map_t *p_root_node, char *p_name_space);
+void print_registered_elems(elem_node_map_t *root, int level);
 
 #ifdef __cplusplus
 }

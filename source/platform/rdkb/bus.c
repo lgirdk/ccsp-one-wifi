@@ -1225,16 +1225,21 @@ static bus_error_t bus_set_string(bus_handle_t *handle, char const *param_name,
 
 static bool remove_substring(char *str, const char *sub)
 {
-    char *match;
-    size_t len = strlen(sub);
-    bool ret = 0;
-    while ((match = strstr(str, sub))) {
-        memmove(match, match + len, strlen(match + len) + 1);
-        ret = 1;
+    size_t len = strlen(str);
+    if (len > strlen(".{i}.")) {
+        if(strcmp(str + (len - strlen(".{i}.")), ".{i}.") == 0) {
+            str[(len - strlen("{i}."))] = 0;
+        } else if(strcmp(str + (len - strlen(".{i}")), ".{i}") == 0) {
+            str[(len - strlen("{i}"))] = 0;
+        } else {
+            return false;
+        }
         wifi_util_info_print(WIFI_BUS, "%s:%d: bus: removeSubstring is matched with %s\n",
             __func__, __LINE__, str);
+        return true;
     }
-    return ret;
+
+    return false;
 }
 
 bus_error_t bus_reg_data_elements(bus_handle_t *handle, bus_data_element_t *data_element,
