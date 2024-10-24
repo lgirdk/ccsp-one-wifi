@@ -2308,8 +2308,6 @@ void process_device_mode_command_event(int device_mode)
         update_wifi_global_config(global_param);
         update_wifi_vap_config(device_mode);
         if (device_mode == rdk_dev_mode_type_ext) {
-            wifi_util_info_print(WIFI_CTRL, "%s:%d: stop gw vaps\r\n", __func__, __LINE__);
-            stop_gateway_vaps();
             if (is_sta_enabled() == true) {
                 wifi_util_info_print(WIFI_CTRL, "%s:%d: start mesh sta\n", __func__, __LINE__);
                 start_extender_vaps();
