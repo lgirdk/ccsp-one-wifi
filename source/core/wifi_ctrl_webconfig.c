@@ -279,6 +279,21 @@ int webconfig_send_associate_status(wifi_ctrl_t *ctrl)
     return RETURN_OK;
 }
 
+int webconfig_send_full_associate_status(wifi_ctrl_t *ctrl)
+{
+    webconfig_subdoc_data_t data;
+    webconfig_init_subdoc_data(&data);
+    data.u.decoded.assoclist_notifier_type = assoclist_notifier_full;
+    if (webconfig_encode(&ctrl->webconfig, &data, webconfig_subdoc_type_associated_clients) !=
+        webconfig_error_none) {
+        wifi_util_error_print(WIFI_CTRL, "%s:%d - Failed webconfig_encode\n", __FUNCTION__,
+            __LINE__);
+    }
+    webconfig_data_free(&data);
+
+    return RETURN_OK;
+}
+
 /* This function is responsible for encoding the data and trigger bus call */
 int webconfig_send_blaster_status(wifi_ctrl_t *ctrl)
 {
@@ -434,6 +449,12 @@ int webconfig_analyze_pending_states(wifi_ctrl_t *ctrl)
             type = webconfig_subdoc_type_associated_clients;
             webconfig_send_associate_status(ctrl);
             break;
+
+        case ctrl_webconfig_state_associated_clients_full_cfg_rsp_pending:
+            type = webconfig_subdoc_type_associated_clients;
+            webconfig_send_full_associate_status(ctrl);
+            break;
+
         case ctrl_webconfig_state_blaster_cfg_complete_rsp_pending:
                 /* Once the blaster triggered successfully, update the status as completed and pass it to OVSM */
                 mgr->blaster_config_global.Status = blaster_state_completed;
@@ -2025,14 +2046,24 @@ webconfig_error_t webconfig_ctrl_apply(webconfig_subdoc_t *doc, webconfig_subdoc
             break;
 
         case webconfig_subdoc_type_associated_clients:
-            wifi_util_dbg_print(WIFI_MGR, "%s:%d: associated clients webconfig subdoc\n", __func__, __LINE__);
+            wifi_util_dbg_print(WIFI_MGR, "%s:%d: associated clients webconfig subdoc\n", __func__,
+                __LINE__);
             if (data->descriptor & webconfig_data_descriptor_encoded) {
-                if (ctrl->webconfig_state & ctrl_webconfig_state_associated_clients_cfg_rsp_pending) {
-                    ctrl->webconfig_state &= ~ctrl_webconfig_state_associated_clients_cfg_rsp_pending;
+                if (ctrl->webconfig_state &
+                    ctrl_webconfig_state_associated_clients_cfg_rsp_pending) {
+                    ctrl->webconfig_state &=
+                        ~ctrl_webconfig_state_associated_clients_cfg_rsp_pending;
+                    ret = webconfig_client_notify_apply(ctrl, &data->u.encoded);
+                } else if (ctrl->webconfig_state &
+                    ctrl_webconfig_state_associated_clients_full_cfg_rsp_pending) {
+                    ctrl->webconfig_state &=
+                        ~ctrl_webconfig_state_associated_clients_full_cfg_rsp_pending;
                     ret = webconfig_client_notify_apply(ctrl, &data->u.encoded);
                 }
             } else {
-                wifi_util_error_print(WIFI_MGR, "%s:%d: Not expected apply to associated clients webconfig subdoc\n", __func__, __LINE__);
+                wifi_util_error_print(WIFI_MGR,
+                    "%s:%d: Not expected apply to associated clients webconfig subdoc\n", __func__,
+                    __LINE__);
             }
             break;
 

@@ -1651,7 +1651,8 @@ int start_wifi_ctrl(wifi_ctrl_t *ctrl)
 #endif
 
     ctrl_queue_timeout_scheduler_tasks(ctrl);
-
+    ctrl->webconfig_state = ctrl_webconfig_state_associated_clients_full_cfg_rsp_pending;
+    webconfig_send_full_associate_status(ctrl);
     ctrl->exit_ctrl = false;
     ctrl->ctrl_initialized = true;
     ctrl_queue_loop(ctrl);
