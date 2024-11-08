@@ -508,6 +508,7 @@ bus_error_t bus_object_data_get(bus_handle_t *handle, bus_object_t l_bus_object,
         wifi_util_dbg_print(WIFI_CTRL,
             "%s:%d bus: bus_property_data_get(): type:0x%x, data->data_type:0x%x, len=%d\n",
             __func__, __LINE__, type, data->data_type, data->raw_data_len);
+        return (bus_error_t)bus_error_invalid_input;
     }
 
     if (rc != RBUS_ERROR_SUCCESS) {

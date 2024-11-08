@@ -1286,14 +1286,9 @@ static void frame_802_11_injector_Handler(bus_handle_t handle, bus_event_t *even
         return;
     }
 
+    data.data_type = bus_data_type_bytes;
     status = get_bus_descriptor()->bus_object_data_get_fn(&handle, event->data, &data,
         (char *)subscription->event_name);
-    if (data.data_type != bus_data_type_bytes) {
-        wifi_util_error_print(WIFI_CTRL,
-            "%s:%d '%s' bus_object_data_get_fn failed with data_type:0x%x, statuc:%\n", __func__,
-            __LINE__, (char *)subscription->event_name, data.data_type, status);
-        return;
-    }
 
     bus_data = (unsigned char *)data.raw_data.bytes;
     len = data.raw_data_len;
@@ -1456,7 +1451,6 @@ static int eth_bh_status_notify()
 void speed_test_handler(bus_handle_t handle, bus_event_t *event, bus_event_sub_t *subscription)
 {
 #if DML_SUPPORT
-    char *pTmp = NULL;
     speed_test_data_t speed_test_data = { 0 };
     bus_error_t status;
     raw_data_t data;
@@ -1469,12 +1463,10 @@ void speed_test_handler(bus_handle_t handle, bus_event_t *event, bus_event_sub_t
     }
 
     memset(&data, 0, sizeof(raw_data_t));
-
+    data.data_type = bus_data_type_uint32;
     status = get_bus_descriptor()->bus_object_data_get_fn(&handle, event->data, &data, "value");
 
-    pTmp = data.raw_data.bytes;
-
-    if ((status != bus_error_success) || (pTmp == NULL)) {
+    if ((status != bus_error_success)) {
         wifi_util_error_print(WIFI_CTRL,
             "%s:%d: bus object data get failed for Event %s, status:%d", __func__, __LINE__,
             subscription->event_name, status);
@@ -1482,12 +1474,12 @@ void speed_test_handler(bus_handle_t handle, bus_event_t *event, bus_event_sub_t
     }
 
     wifi_util_dbg_print(WIFI_CTRL, "%s: %d event name : [%s] Data received : [%u], status:%d\n",
-        __func__, __LINE__, event->name, atoi(pTmp), status);
+        __func__, __LINE__, event->name, data.raw_data.u32, status);
 
     if ((strcmp(subscription->event_name, SPEEDTEST_STATUS)) == 0) {
-        ctrl->speed_test_running = atoi(pTmp);
+        ctrl->speed_test_running = data.raw_data.u32;
     } else if ((strcmp(subscription->event_name, SPEEDTEST_SUBSCRIBE)) == 0) {
-        ctrl->speed_test_timeout = atoi(pTmp);
+        ctrl->speed_test_timeout = data.raw_data.u32;
     }
     speed_test_data.speed_test_running = ctrl->speed_test_running;
     speed_test_data.speed_test_timeout = ctrl->speed_test_timeout;
