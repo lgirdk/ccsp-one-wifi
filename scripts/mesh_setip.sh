@@ -266,6 +266,13 @@ if [ -n "${IF_MESHBR50}" ] && [ $USE_BRIDGEUTILS -eq 0 ]; then
     fi
 fi
 
+#XER5 uses mld interface for wifi7 operation, hence adding the correct interface 
+if [ "$MODEL_NUM" == "VTER11QEL" ]; then
+    wifi7_MESHVAP24="mld12"
+    wifi7_MESHVAP50="mld13"
+    ifconfig $wifi7_MESHVAP24 mtu $BRIDGE_MTU
+    ifconfig $wifi7_MESHVAP50 mtu $BRIDGE_MTU
+fi
 
 if [ "$MODEL_NUM" == "PX5001" ] || [ "$MODEL_NUM" == "CGM4331COM" ] || [ "$MODEL_NUM" == "CGM4981COM" ] || [ "$MODEL_NUM" == "CGM601TCOM" ] ||  [ "$MODEL_NUM" == "SG417DBCT" ] || [ "$MODEL_NUM" == "SCER11BEL" ] || [ "$MODEL_NUM" == "VTER11QEL" ] || [ "$MODEL_NUM" == "SR201" ] || [ "$MODEL_NUM" == "SR203" ]  || [ "$MODEL_NUM" == "SR300" ] ||  [ "$MODEL_NUM" == "SE501" ] || [ "$MODEL_NUM" == "TG4482A" ] || [ "$MODEL_NUM" == "WNXL11BWL" ] || [ "$MODEL_NUM" == "SR213" ] || [ "$MODEL_NUM" == "CGA4332COM" ]; then
         brctl112=`brctl show | grep "$IF_MESHVAP24"`
