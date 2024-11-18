@@ -113,9 +113,12 @@ void print_wifi_hal_vap_wps_data(wifi_dbg_type_t log_file_type, char *prefix, un
     wifi_util_info_print(log_file_type,"%s:%d: [%s] Wifi_wps_Config vap_index=%d\n enable:%d\n methods:%d\r\n", __func__, __LINE__, prefix, vap_index, l_wifi_wps->enable, l_wifi_wps->methods);
 }
 
-#define WEBCONFIG_DML_SUBDOC_STATES (ctrl_webconfig_state_vap_all_cfg_rsp_pending| \
-                                     ctrl_webconfig_state_macfilter_cfg_rsp_pending| \
-                                     ctrl_webconfig_state_factoryreset_cfg_rsp_pending)
+#define WEBCONFIG_DML_SUBDOC_STATES                         \
+    (ctrl_webconfig_state_vap_all_cfg_rsp_pending |         \
+        ctrl_webconfig_state_macfilter_cfg_rsp_pending |    \
+        ctrl_webconfig_state_factoryreset_cfg_rsp_pending | \
+        ctrl_webconfig_state_sta_conn_status_rsp_pending |  \
+        ctrl_webconfig_state_vap_mesh_sta_cfg_rsp_pending)
 
 int webconfig_blaster_apply(wifi_ctrl_t *ctrl, webconfig_subdoc_decoded_data_t *data)
 {
@@ -384,12 +387,12 @@ int webconfig_analyze_pending_states(wifi_ctrl_t *ctrl)
             }
         break;
         case ctrl_webconfig_state_sta_conn_status_rsp_pending:
-            type = webconfig_subdoc_type_mesh_sta;
+            type = webconfig_subdoc_type_dml;
             webconfig_send_vap_subdoc_status(ctrl, type);
         break;
         case ctrl_webconfig_state_vap_mesh_sta_cfg_rsp_pending:
             if (check_wifi_vap_sched_timeout_active_status(ctrl, isVapSTAMesh) == false) {
-                type = webconfig_subdoc_type_mesh_sta;
+                type = webconfig_subdoc_type_dml;
                 webconfig_send_vap_subdoc_status(ctrl, type);
             } else {
                 return RETURN_OK;
@@ -420,13 +423,8 @@ int webconfig_analyze_pending_states(wifi_ctrl_t *ctrl)
             webconfig_send_dml_subdoc_status(ctrl);
             break;
         case ctrl_webconfig_state_factoryreset_cfg_rsp_pending:
-            if(ctrl->network_mode == rdk_dev_mode_type_gw) {
-                type = webconfig_subdoc_type_dml;
-                webconfig_send_dml_subdoc_status(ctrl);
-            } else  if(ctrl->network_mode == rdk_dev_mode_type_ext) {
-                type = webconfig_subdoc_type_mesh_sta;
-                webconfig_send_vap_subdoc_status(ctrl, type);
-            }
+            type = webconfig_subdoc_type_dml;
+            webconfig_send_dml_subdoc_status(ctrl);
         break;
         case ctrl_webconfig_state_wifi_config_cfg_rsp_pending:
             type = webconfig_subdoc_type_wifi_config;

@@ -2314,12 +2314,7 @@ void process_device_mode_command_event(int device_mode)
             start_gateway_vaps();
         }
     }
-    if(device_mode == rdk_dev_mode_type_gw) {
-        ctrl->webconfig_state |= ctrl_webconfig_state_vap_all_cfg_rsp_pending;
-    } else if (device_mode == rdk_dev_mode_type_ext) {
-        /* Null out VIF table by sending NULL subdoc */
-        ctrl->webconfig_state |= ctrl_webconfig_state_vap_mesh_cfg_rsp_pending;
-    }
+    ctrl->webconfig_state |= ctrl_webconfig_state_vap_all_cfg_rsp_pending;
 }
 
 void process_sta_trigger_disconnection(unsigned int disconnection_type)
