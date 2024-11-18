@@ -989,6 +989,7 @@ int start_wifi_health_monitor_thread(void)
 int scan_results_callback(int radio_index, wifi_bss_info_t **bss, unsigned int *num)
 {
     scan_results_t  res;
+    wifi_ctrl_t *ctrl = (wifi_ctrl_t *)get_wifictrl_obj();
     memset(&res, 0, sizeof(scan_results_t));
 
     res.radio_index = radio_index;
@@ -1001,8 +1002,10 @@ int scan_results_callback(int radio_index, wifi_bss_info_t **bss, unsigned int *
         res.num = *num;
         memcpy((unsigned char *)res.bss, (unsigned char *)(*bss), (*num)*sizeof(wifi_bss_info_t));
     }
-
-    push_event_to_ctrl_queue(&res, sizeof(scan_results_t), wifi_event_type_hal_ind, wifi_event_scan_results, NULL);
+    if (ctrl->network_mode == rdk_dev_mode_type_ext) {
+        push_event_to_ctrl_queue(&res, sizeof(scan_results_t), wifi_event_type_hal_ind,
+            wifi_event_scan_results, NULL);
+    }
     free(*bss);
 
     return 0;
