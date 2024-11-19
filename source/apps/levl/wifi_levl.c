@@ -1731,6 +1731,8 @@ int levl_init(wifi_app_t *app, unsigned int create_flag)
             { NULL, NULL, NULL, NULL, NULL, NULL }, slow_speed, ZERO_TABLE },
         { WIFI_LEVL_CSI_DATA, bus_element_type_event,
             { NULL, NULL, NULL, NULL, levl_event_handler, NULL }, slow_speed, ZERO_TABLE },
+        { WIFI_LEVL_CSI_DATAFIFO, bus_element_type_event,
+            { NULL, NULL, NULL, NULL, levl_event_handler, NULL }, slow_speed, ZERO_TABLE },
         { WIFI_LEVL_CLIENTMAC, bus_element_type_property,
             { levl_get_handler, levl_set_handler, NULL, NULL, NULL, NULL}, slow_speed, ZERO_TABLE },
         { WIFI_LEVL_NUMBEROFENTRIES, bus_element_type_property,
