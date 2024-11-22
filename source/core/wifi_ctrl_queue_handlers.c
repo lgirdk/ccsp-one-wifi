@@ -1,15 +1,15 @@
 /************************************************************************************
   If not stated otherwise in this file or this component's LICENSE file the
   following copyright and licenses apply:
-  
+
   Copyright 2018 RDK Management
-  
+
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
   You may obtain a copy of the License at
-  
+
   http://www.apache.org/licenses/LICENSE-2.0
-  
+
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -953,7 +953,7 @@ int process_maclist_timeout(void *arg)
         wifi_util_error_print(WIFI_CTRL, "%s:%d NULL vap_info Pointer\n", __func__, __LINE__);
         return TIMER_TASK_ERROR;
     }
-    
+
     rdk_vap_info = get_wifidb_rdk_vap_info(kick->vap_index);
     if (rdk_vap_info == NULL) {
         wifi_util_error_print(WIFI_CTRL, "%s:%d NULL rdk_vap_info Pointer\n", __func__, __LINE__);
@@ -991,7 +991,7 @@ int process_maclist_timeout(void *arg)
 #ifdef NL80211_ACL
                 if (wifi_hal_addApAclDevice(kick->vap_index, str_str) != RETURN_OK) {
 #else
-		if (wifi_addApAclDevice(kick->vap_index, str_str) != RETURN_OK) {
+                if (wifi_addApAclDevice(kick->vap_index, str_str) != RETURN_OK) {
 #endif
                     wifi_util_error_print(WIFI_CTRL, "%s:%d: wifi_addApAclDevice failed. vap_index %d, mac %s \n",
                             __func__, __LINE__, kick->vap_index, str_str);
@@ -1304,7 +1304,7 @@ void process_kick_assoc_devices_event(void *data)
     kick_details->vap_index = vap_index;
     timeout = atoi(s_timeout);
     scheduler_add_timer_task(ctrl->sched, FALSE, NULL, process_maclist_timeout, kick_details,
-            timeout*1000, 1, FALSE); 
+            timeout*1000, 1, FALSE);
 
     wifi_util_info_print(WIFI_CTRL, "%s:%d vap_index is %s mac_list is %s timeout is %s\n", __func__, __LINE__, s_vapindex, s_maclist, s_timeout);
     return;
@@ -2151,6 +2151,17 @@ void process_levl_rfc(bool type)
     return;
 }
 
+void process_tcm_rfc(bool type)
+{
+    wifi_util_dbg_print(WIFI_DB, "Enter func %s: %d : Tcm RFC: %d\n", __FUNCTION__, __LINE__,
+        type);
+    wifi_rfc_dml_parameters_t *rfc_param = (wifi_rfc_dml_parameters_t *)get_ctrl_rfc_parameters();
+    rfc_param->tcm_enabled_rfc = type;
+    get_wifidb_obj()->desc.update_rfc_config_fn(0, rfc_param);
+    wifi_util_dbg_print(WIFI_DB, "Exit func %s: %d : Tcm RFC: %d\n", __FUNCTION__, __LINE__,
+        type);
+}
+
 void process_wps_command_event(unsigned int vap_index)
 {
     wifi_util_info_print(WIFI_CTRL,"%s:%d wifi wps test vap index = %d\n",__func__, __LINE__, vap_index);
@@ -2795,7 +2806,7 @@ int get_neighbor_scan_results(void *arg)
     wifi_monitor_data_t *data = (wifi_monitor_data_t *) malloc(sizeof(wifi_monitor_data_t));
     wifi_event_route_t route;
 
-    //Stop neighbor scan 
+    //Stop neighbor scan
     if (data == NULL) {
         wifi_util_error_print(WIFI_CTRL,"%s:%d data allocation failed\r\n", __func__, __LINE__);
         snprintf(monitor_param->neighbor_scan_cfg.DiagnosticsState, sizeof(monitor_param->neighbor_scan_cfg.DiagnosticsState), "Completed" );
@@ -2844,7 +2855,7 @@ void process_neighbor_scan_command_event()
         wifi_util_dbg_print(WIFI_CTRL, "%s:%d: Scan already in Progress!!!\n", __func__, __LINE__);
         return;
     }
-    
+
     get_stubs_descriptor()->strcpy_fn(monitor_param->neighbor_scan_cfg.DiagnosticsState, sizeof(monitor_param->neighbor_scan_cfg.DiagnosticsState), "Requested");
 
     wifi_monitor_data_t *data = (wifi_monitor_data_t *) malloc(sizeof(wifi_monitor_data_t));
@@ -2984,7 +2995,7 @@ static void process_monitor_init_command(void)
     data->u.mon_stats_config.data_type = mon_stats_type_associated_device_stats;
     data->u.mon_stats_config.args.app_info = 0;
     data->u.mon_stats_config.start_immediately = false;
-    
+
     memset(&route, 0, sizeof(wifi_event_route_t));
     route.dst = wifi_sub_component_mon;
     route.u.inst_bit_map = 0;
@@ -2994,7 +3005,7 @@ static void process_monitor_init_command(void)
         for (vapArrayIndex = 0; vapArrayIndex < getNumberVAPsPerRadio(radio_index); vapArrayIndex++) {
             data->u.mon_stats_config.args.vap_index = wifi_mgr->radio_config[radio_index].vaps.rdk_vap_array[vapArrayIndex].vap_index;
             if (!isVapSTAMesh(data->u.mon_stats_config.args.vap_index)) {
-                wifi_util_dbg_print(WIFI_CTRL, "%s:%d pushing the event to collect client diag on vap %d\n", __func__, __LINE__, data->u.mon_stats_config.args.vap_index);    
+                wifi_util_dbg_print(WIFI_CTRL, "%s:%d pushing the event to collect client diag on vap %d\n", __func__, __LINE__, data->u.mon_stats_config.args.vap_index);  
                 push_event_to_monitor_queue(data, wifi_event_monitor_data_collection_config, &route);
             }
         }
@@ -3103,6 +3114,10 @@ void handle_command_event(wifi_ctrl_t *ctrl, void *data, unsigned int len,
 
     case wifi_event_type_prefer_private_rfc:
         process_prefer_private_rfc(*(bool *)data);
+        break;
+
+    case wifi_event_type_tcm_rfc:
+        process_tcm_rfc(*(bool *)data);
         break;
 
     case wifi_event_type_trigger_disconnection:

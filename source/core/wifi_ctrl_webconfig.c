@@ -484,7 +484,11 @@ static bool is_preassoc_cac_config_changed(wifi_vap_info_t *old, wifi_vap_info_t
         || (IS_STR_CHANGED(old->u.bss_info.preassoc.operational_data_transmit_rates, new->u.bss_info.preassoc.operational_data_transmit_rates, sizeof(old->u.bss_info.preassoc.operational_data_transmit_rates)))
         || (IS_STR_CHANGED(old->u.bss_info.preassoc.supported_data_transmit_rates, new->u.bss_info.preassoc.supported_data_transmit_rates, sizeof(old->u.bss_info.preassoc.supported_data_transmit_rates)))
         || (IS_STR_CHANGED(old->u.bss_info.preassoc.minimum_advertised_mcs, new->u.bss_info.preassoc.minimum_advertised_mcs, sizeof(old->u.bss_info.preassoc.minimum_advertised_mcs)))
-        || (IS_STR_CHANGED(old->u.bss_info.preassoc.sixGOpInfoMinRate, new->u.bss_info.preassoc.sixGOpInfoMinRate, sizeof(old->u.bss_info.preassoc.sixGOpInfoMinRate)))) {
+        || (IS_STR_CHANGED(old->u.bss_info.preassoc.sixGOpInfoMinRate, new->u.bss_info.preassoc.sixGOpInfoMinRate, sizeof(old->u.bss_info.preassoc.sixGOpInfoMinRate)))
+        || (IS_CHANGED(old->u.bss_info.preassoc.time_ms, new->u.bss_info.preassoc.time_ms))
+        || (IS_CHANGED(old->u.bss_info.preassoc.min_num_mgmt_frames, new->u.bss_info.preassoc.min_num_mgmt_frames))
+        || (IS_STR_CHANGED(old->u.bss_info.preassoc.tcm_exp_weightage, new->u.bss_info.preassoc.tcm_exp_weightage, sizeof(old->u.bss_info.preassoc.tcm_exp_weightage)))
+        || (IS_STR_CHANGED(old->u.bss_info.preassoc.tcm_gradient_threshold, new->u.bss_info.preassoc.tcm_gradient_threshold, sizeof(old->u.bss_info.preassoc.tcm_gradient_threshold)))) {
         return true;
     } else {
         return false;
@@ -1231,9 +1235,9 @@ int webconfig_cac_apply(wifi_ctrl_t *ctrl, webconfig_subdoc_decoded_data_t *data
         for (vap_index = 0; vap_index < getNumberVAPsPerRadio(radio_index); vap_index++) {
             wifi_util_dbg_print(WIFI_CTRL,"Comparing cac config\n");
 
-            if (is_preassoc_cac_config_changed(&l_vap_maps->vap_array[vap_index], &data->radios[radio_index].vaps.vap_map.vap_array[vap_index]) 
+            if (is_preassoc_cac_config_changed(&l_vap_maps->vap_array[vap_index], &data->radios[radio_index].vaps.vap_map.vap_array[vap_index])
                 || is_postassoc_cac_config_changed(&l_vap_maps->vap_array[vap_index], &data->radios[radio_index].vaps.vap_map.vap_array[vap_index])) {
-                // cac data changed apply
+                // cac or tcm data changed apply
                 wifi_util_info_print(WIFI_CTRL, "%s:%d: Change detected in received cac config, applying new configuration for vap: %d\n",
                                     __func__, __LINE__, vap_index);
                 wifidb_update_wifi_cac_config(&data->radios[radio_index].vaps.vap_map);

@@ -35,6 +35,8 @@
 #include "wifi_ctrl.h"
 #include "wifi_util.h"
 
+#define TCM_EXPWEIGHT "0.6"
+#define TCM_GRADTHRESHOLD "0.18"
 //This Macro ONE_WIFI_CHANGES, used to modify the validator changes. Re-check is required where the macro is used
 #define ONE_WIFI_CHANGES
 
@@ -3250,7 +3252,6 @@ webconfig_error_t decode_preassoc_cac_object(const cJSON *preassoc, wifi_preasso
 {
     const cJSON *param;
     int val, ret;
-
     // RssiUpThreshold
     decode_param_allow_empty_string(preassoc, "RssiUpThreshold", param);
 
@@ -3385,8 +3386,56 @@ webconfig_error_t decode_preassoc_cac_object(const cJSON *preassoc, wifi_preasso
    else {
             strcpy((char *)preassoc_info->sixGOpInfoMinRate, "disabled");
    }
+
+    wifi_util_dbg_print(WIFI_WEBCONFIG,"%s:%d: decoding preassoc settings passed\n", __func__, __LINE__);
+
     return webconfig_error_none;
 }
+
+webconfig_error_t decode_tcm_preassoc_object(const cJSON *preassoc, wifi_preassoc_control_t *preassoc_info)
+{
+    const cJSON *param;
+    int ret;
+    float fval;
+
+    decode_param_integer(preassoc, "TcmWaitTime", param);
+    preassoc_info->time_ms = param->valuedouble;
+
+    decode_param_integer(preassoc, "TcmMinMgmtFrames", param);
+    preassoc_info->min_num_mgmt_frames = param->valuedouble;
+
+    decode_param_allow_empty_string(preassoc, "TcmExpWeightage", param);
+    if ((strcmp(param->valuestring, TCM_EXPWEIGHT) == 0) || (strlen(param->valuestring) == 0)) {
+        strcpy((char *)preassoc_info->tcm_exp_weightage, TCM_EXPWEIGHT);
+    } else {
+        ret = sscanf(param->valuestring, "%f", &fval);
+
+        if (ret != 1) {
+            wifi_util_dbg_print(WIFI_WEBCONFIG,"%s:%d Incorrect format.\n", __FUNCTION__,__LINE__);
+            return webconfig_error_decode;
+        }
+
+        strcpy((char *)preassoc_info->tcm_exp_weightage, param->valuestring);
+    }
+
+    decode_param_allow_empty_string(preassoc, "TcmGradientThreshold", param);
+    if ((strcmp(param->valuestring, TCM_GRADTHRESHOLD) == 0) || (strlen(param->valuestring) == 0)) {
+        strcpy((char *)preassoc_info->tcm_gradient_threshold, TCM_GRADTHRESHOLD);
+    } else {
+        ret = sscanf(param->valuestring, "%f", &fval);
+
+        if (ret != 1) {
+            wifi_util_dbg_print(WIFI_WEBCONFIG,"%s:%d Incorrect format \n", __FUNCTION__,__LINE__);
+            return webconfig_error_decode;
+        }
+
+        strcpy((char *)preassoc_info->tcm_gradient_threshold, param->valuestring);
+    }
+    wifi_util_dbg_print(WIFI_WEBCONFIG,"%s:%d: decoding tcm preassoc settings passed\n", __func__, __LINE__);
+
+    return webconfig_error_none;
+}
+
 
 webconfig_error_t decode_postassoc_cac_object(const cJSON *postassoc, wifi_postassoc_control_t *postassoc_info)
 {
@@ -3513,6 +3562,12 @@ webconfig_error_t decode_cac_object(wifi_vap_info_t *vap_info, cJSON *obj_array 
     decode_param_object(obj_array, "PreAssociationDeny", preassoc);
     if (decode_preassoc_cac_object(preassoc, &vap_info->u.bss_info.preassoc) != webconfig_error_none) {
         wifi_util_error_print(WIFI_WEBCONFIG, "%s:%d: preassoc cac objects validation failed for %s\n",__FUNCTION__, __LINE__, vap_info->vap_name);
+        return webconfig_error_decode;
+    }
+
+    decode_param_object(obj_array, "TcmPreAssociationDeny", preassoc);
+    if (decode_tcm_preassoc_object(preassoc, &vap_info->u.bss_info.preassoc) != webconfig_error_none) {
+        wifi_util_error_print(WIFI_WEBCONFIG, "%s:%d: tcm preassoc  objects validation failed for %s\n",__FUNCTION__, __LINE__, vap_info->vap_name);
         return webconfig_error_decode;
     }
 

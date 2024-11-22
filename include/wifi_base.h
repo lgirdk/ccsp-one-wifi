@@ -73,6 +73,7 @@ extern "C" {
 #define WIFI_COLLECT_STATS_RADIO_TEMPERATURE           "Device.WiFi.CollectStats.Radio.{i}.RadioTemperatureStats"
 #define WIFI_COLLECT_STATS_VAP_TABLE                   "Device.WiFi.CollectStats.AccessPoint.{i}."
 #define WIFI_COLLECT_STATS_ASSOC_DEVICE_STATS          "Device.WiFi.CollectStats.AccessPoint.{i}.AssociatedDeviceStats"
+#define WIFI_NOTIFY_DENY_TCM_ASSOCIATION               "Device.WiFi.ConnectionControl.TcmClientDenyAssociation"
 #define WIFI_STUCK_DETECT_FILE_NAME         "/nvram/wifi_stuck_detect"
 
 #define PLAN_ID_LENGTH     38
@@ -431,6 +432,7 @@ typedef struct {
     bool blaster_enabled_rfc;
     bool greylist_enabled_rfc;
     bool cac_enabled_rfc;
+    bool tcm_enabled_rfc;
 } wifi_rfc_dml_parameters_t;
 
 typedef struct {
