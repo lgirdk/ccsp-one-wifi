@@ -56,12 +56,12 @@ extern "C" {
 #define WIFI_ACCESSPOINT_DEV_DEAUTH         "Device.WiFi.AccessPoint.{i}.X_RDK_deviceDeauthenticated"
 #define WIFI_ACCESSPOINT_DIAGDATA           "Device.WiFi.AccessPoint.{i}.X_RDK_DiagData"
 #define WIFI_ACCESSPOINT_FORCE_APPLY        "Device.WiFi.AccessPoint.{i}.ForceApply"
+#define WIFI_ACCESSPOINT_RADIUS_CONNECTED_ENDPOINT   "Device.WiFi.AccessPoint.{i}.Security.ConnectedRadiusEndpoint"
 #define WIFI_CSI_TABLE                      "Device.WiFi.X_RDK_CSI.{i}."
 #define WIFI_CSI_DATA                       "Device.WiFi.X_RDK_CSI.{i}.data"
 #define WIFI_CSI_CLIENTMACLIST              "Device.WiFi.X_RDK_CSI.{i}.ClientMaclist"
 #define WIFI_CSI_ENABLE                     "Device.WiFi.X_RDK_CSI.{i}.Enable"
 #define WIFI_CSI_NUMBEROFENTRIES            "Device.WiFi.X_RDK_CSINumberOfEntries"
-
 #define WIFI_COLLECT_STATS_TABLE            "Device.WiFi.CollectStats.Radio.{i}."
 #define WIFI_COLLECT_STATS_RADIO_ON_CHANNEL_STATS      "Device.WiFi.CollectStats.Radio.{i}.ScanMode.on_channel.ChannelStats"
 #define WIFI_COLLECT_STATS_RADIO_OFF_CHANNEL_STATS     "Device.WiFi.CollectStats.Radio.{i}.ScanMode.off_channel.ChannelStats"

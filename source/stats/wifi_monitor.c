@@ -2208,6 +2208,29 @@ int device_disassociated(int ap_index, char *mac, int reason)
     return 0;
 }
 
+void notify_radius_endpoint_change(radius_fallback_and_failover_data_t *radius_data)
+{
+    wifi_vap_security_t *vapSecurity = (wifi_vap_security_t *)Get_wifi_object_bss_security_parameter(radius_data->apIndex);
+    if (isVapHotspotSecure5g(radius_data->apIndex) || isVapHotspotSecure6g(radius_data->apIndex) || isVapHotspotOpen5g(radius_data->apIndex) || isVapHotspotOpen6g(radius_data->apIndex)) {
+        if (vapSecurity != NULL) {
+            if(radius_data->radius_switch_reason == RADIUS_FAILOVER){
+#ifndef WIFI_HAL_VERSION_3_PHASE2
+                strcpy((char*)vapSecurity->u.radius.connectedendpoint,(char*)vapSecurity->u.radius.s_ip);
+#else
+                vapSecurity->u.radius.connectedendpoint = vapSecurity->u.radius.s_ip;
+#endif
+            }
+            else {
+#ifndef WIFI_HAL_VERSION_3_PHASE2 
+                strcpy((char*)vapSecurity->u.radius.connectedendpoint,(char*)vapSecurity->u.radius.ip);
+#else
+                vapSecurity->u.radius.connectedendpoint = vapSecurity->u.radius.ip;
+#endif
+            }
+        }
+    }
+}
+
 int radius_eap_failure_callback(unsigned int apIndex, int reason)
 {
     radius_eap_data_t radius_eap_data;
@@ -2216,6 +2239,18 @@ int radius_eap_failure_callback(unsigned int apIndex, int reason)
 
     //Push event to ctrl queue and handle it in whix app
     push_event_to_ctrl_queue(&radius_eap_data, sizeof(radius_eap_data), wifi_event_type_hal_ind, wifi_event_radius_eap_failure, NULL);
+    return 0;
+}
+
+int radius_fallback_and_failover_callback(unsigned int apIndex, int reason)
+{
+    radius_fallback_and_failover_data_t radius_fallback_and_failover;
+    radius_fallback_and_failover.apIndex = apIndex;
+    radius_fallback_and_failover.radius_switch_reason = reason;
+
+    //Push event to ctrl queue and handle it in whix app
+    push_event_to_ctrl_queue(&radius_fallback_and_failover, sizeof(radius_fallback_and_failover), wifi_event_type_hal_ind, wifi_event_radius_fallback_and_failover, NULL);
+    notify_radius_endpoint_change(&radius_fallback_and_failover);
     return 0;
 }
 
@@ -2770,6 +2805,7 @@ int init_wifi_monitor()
     wifi_hal_apDeAuthEvent_callback_register(device_deauthenticated);
     wifi_hal_apDisassociatedDevice_callback_register(device_disassociated);
     wifi_hal_radius_eap_failure_callback_register(radius_eap_failure_callback);
+    wifi_hal_radiusFallback_failover_callback_register(radius_fallback_and_failover_callback);
     scheduler_add_timer_task(g_monitor_module.sched, FALSE, NULL, refresh_assoc_frame_entry, NULL, (MAX_ASSOC_FRAME_REFRESH_PERIOD * 1000), 0, FALSE);
 
     wifi_util_dbg_print(WIFI_MON, "%s:%d Wi-Fi monitor is initialized successfully\n", __func__, __LINE__);
