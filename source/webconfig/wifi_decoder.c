@@ -4491,8 +4491,10 @@ webconfig_error_t decode_radio_neighbor_stats_object(wifi_provider_response_t **
             return webconfig_error_decode;
         }
 
-        decode_param_string(neighbor_stats, "ap_SSID", param);
-        strncpy(neighbor_stats_data[count].ap_SSID, param->valuestring, sizeof(neighbor_stats_data[count].ap_SSID) - 1);
+        param = cJSON_GetObjectItem(neighbor_stats, "ap_SSID");
+        if ((param != NULL) && (param->valuestring != NULL)) {
+            strncpy(neighbor_stats_data[count].ap_SSID, param->valuestring, sizeof(neighbor_stats_data[count].ap_SSID) - 1);
+        }
 
         decode_param_string(neighbor_stats, "ap_BSSID", param);
         strncpy(neighbor_stats_data[count].ap_BSSID, param->valuestring, sizeof(neighbor_stats_data[count].ap_BSSID) - 1);
