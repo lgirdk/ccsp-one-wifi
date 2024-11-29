@@ -2608,6 +2608,7 @@ void process_channel_change_event(wifi_channel_change_event_t *ch_chg, bool is_n
                             ch_chg->channel, ch_chg->event, ch_chg->sub_event, ch_chg->op_class);
 
     stop_wifi_sched_timer(ch_chg->radioIndex, ctrl, wifi_csa_sched);
+    stop_wifi_sched_timer(ch_chg->radioIndex, ctrl, wifi_acs_sched);
 
     if ((ch_chg->event == WIFI_EVENT_CHANNELS_CHANGED) && ((radio_params->channel == ch_chg->channel)
                 && (radio_params->channelWidth == ch_chg->channelWidth))) {
@@ -2795,7 +2796,6 @@ void process_channel_change_event(wifi_channel_change_event_t *ch_chg, bool is_n
     g_wifidb->ctrl.webconfig_state |= ctrl_webconfig_state_radio_cfg_rsp_pending;
     start_wifi_sched_timer(ch_chg->radioIndex, ctrl, wifi_radio_sched);
     update_wifi_radio_config(ch_chg->radioIndex, radio_params, radio_feat);
-    ctrl->acs_pending[ch_chg->radioIndex] = false;
 }
 
 #define MAX_NEIGHBOURS 250

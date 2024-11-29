@@ -53,7 +53,7 @@ static int run_analytics_event(void* arg);
 
 static int switch_dfs_channel(void *arg);
 int dfs_channel;
-
+void start_wifi_sched_timer(unsigned int, struct wifi_ctrl *ctrl, wifi_scheduler_type_t type);
 void deinit_wifi_ctrl(wifi_ctrl_t *ctrl)
 {
     if(ctrl->vif_apply_pending_queue != NULL) {
@@ -439,6 +439,7 @@ int start_radios(rdk_dev_mode_type_t mode)
         ctrl->acs_pending[index] = false;
         if (wifi_radio_oper_param->autoChannelEnabled == true) {
             ctrl->acs_pending[index] = true;
+            start_wifi_sched_timer(index, ctrl, wifi_acs_sched); //Starting the acs_scheduler
         }
 
         //In case of reboot/FR, Non DFS channel will be selected and radio will switch to DFS Channel after 1 min.
@@ -1758,6 +1759,9 @@ int wifi_sched_timeout(void *arg)
         case wifi_vap_sched:
             handler_id = sched_id->wifi_vap_sched_handler_id;
             break;
+        case wifi_acs_sched:
+            handler_id = sched_id->wifi_acs_sched_handler_id;
+            break;
         default:
             free(args);
             wifi_util_error_print(WIFI_CTRL, "%s:%d: wifi index:%d invalid type:%d\n", __func__, __LINE__, args->index, args->type);
@@ -1771,9 +1775,11 @@ int wifi_sched_timeout(void *arg)
     if (args->type == wifi_csa_sched) {
         resched_data_to_ctrl_queue();
     }
+    if (args->type == wifi_acs_sched) {
+        l_ctrl->acs_pending[args->index] = false; // Clearing acs_pending flag
+    }
 
     free(args);
-
     return TIMER_TASK_COMPLETE;
 }
 
@@ -1798,6 +1804,10 @@ void start_wifi_sched_timer(unsigned int index, wifi_ctrl_t *l_ctrl, wifi_schedu
             handler_id = sched_id->wifi_vap_sched_handler_id;
             VAP_ARRAY_INDEX(vap_array_index, mgr->hal_cap, index);
             handler_index = vap_array_index;
+            break;
+        case wifi_acs_sched:
+            handler_id = sched_id->wifi_acs_sched_handler_id;
+            handler_index = index;
             break;
         default:
             wifi_util_error_print(WIFI_CTRL, "%s:%d: wifi index:%d invalid type:%d\n", __func__, __LINE__, index, type);
@@ -1845,6 +1855,10 @@ void stop_wifi_sched_timer(unsigned int index, wifi_ctrl_t *l_ctrl, wifi_schedul
             VAP_ARRAY_INDEX(vap_array_index, mgr->hal_cap, index);
             handler_index = vap_array_index;
             break;
+        case wifi_acs_sched:
+            handler_id = sched_id->wifi_acs_sched_handler_id;
+            handler_index = index;
+            break;
         default:
             wifi_util_error_print(WIFI_CTRL, "%s:%d: wifi index:%d invalid type:%d\n", __func__, __LINE__, index, type);
             return;
@@ -1858,6 +1872,9 @@ void stop_wifi_sched_timer(unsigned int index, wifi_ctrl_t *l_ctrl, wifi_schedul
 
         if (type == wifi_csa_sched) {
             resched_data_to_ctrl_queue();
+        }
+        if (type == wifi_acs_sched) {
+            l_ctrl->acs_pending[handler_index] = false; // Clearing acs_pending flag
         }
     }
 }
