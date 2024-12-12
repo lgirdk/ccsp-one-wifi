@@ -117,6 +117,7 @@ extern "C" {
 #endif
 #define CHK_AVRO_ERR (strlen(avro_strerror()) > 0)
 
+#define UNREFERENCED_PARAMETER(_p_) (void)(_p_)
 #define CFG_ID_LEN             64
 typedef char stats_cfg_id_t[CFG_ID_LEN];
 

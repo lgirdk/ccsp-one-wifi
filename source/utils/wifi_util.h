@@ -30,7 +30,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/prctl.h>
-#include "bus.h"
 #include "ccsp.h"
 
 #ifdef __cplusplus
