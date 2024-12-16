@@ -2519,8 +2519,8 @@ int events_bus_publish(wifi_event_t *evt)
         if (events_getSubscribed(eventName) == TRUE) {
             pthread_mutex_lock(&ctrl->events_bus_data.events_bus_lock);
             memset(&data, 0, sizeof(raw_data_t));
-            data.data_type = bus_data_type_uint8;
-            data.raw_data.u8 = evt->u.mon_data->u.dev.sta_mac[0];
+            data.data_type = bus_data_type_bytes;
+            data.raw_data.bytes = evt->u.mon_data->u.dev.sta_mac;
             data.raw_data_len = sizeof(evt->u.mon_data->u.dev.sta_mac);
 
             rc = get_bus_descriptor()->bus_event_publish_fn(&ctrl->handle, eventName, &data);
