@@ -53,7 +53,7 @@
 #define TELEMETRY_UPDATE_INTERVAL_MS 3600000 // 1 hour
 #define CAPTURE_VAP_STATUS_INTERVAL_MS 5*60*1000 // 5 minutes
 #define RADIO_DIAG_STATS_INTERVAL_MS 30000 // 30 seconds
-
+#define WIFI_CHANUTIL_PROVIDER_DELAY_SEC 5 // 5 seconds
 static unsigned int vap_up_arr[MAX_VAP]={0};
 static unsigned char vap_nas_status[MAX_VAP]={0};
 static unsigned int vap_iteration=0;
@@ -2030,6 +2030,7 @@ static void config_radio_channel_util(wifi_monitor_data_t *data)
 
     data->u.mon_stats_config.data_type = mon_stats_type_radio_channel_stats;
     data->u.mon_stats_config.args.scan_mode = WIFI_RADIO_SCAN_MODE_ONCHAN;
+    data->u.mon_stats_config.delay_provider_sec = WIFI_CHANUTIL_PROVIDER_DELAY_SEC;
     /* Request to get channel utilization */
     data->u.mon_stats_config.args.app_info = whix_app_event_type_chan_util;
     for (radioIndex = 0; radioIndex < getNumberRadios(); radioIndex++) {
@@ -2051,6 +2052,7 @@ static void config_radio_channel_stats(wifi_monitor_data_t *data)
     /* Request to collect other channel stats */
     data->u.mon_stats_config.data_type = mon_stats_type_radio_channel_stats;
     data->u.mon_stats_config.args.scan_mode = WIFI_RADIO_SCAN_MODE_ONCHAN;
+    data->u.mon_stats_config.delay_provider_sec = WIFI_CHANUTIL_PROVIDER_DELAY_SEC;
     data->u.mon_stats_config.args.app_info = whix_app_event_type_chan_stats;
 
     //for each vap push the event to monitor queue
