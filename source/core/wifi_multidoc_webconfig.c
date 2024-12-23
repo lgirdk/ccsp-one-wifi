@@ -1069,6 +1069,9 @@ pErr wifi_vap_cfg_subdoc_handler(void *data)
 
         cJSON_AddBoolToObject(vb_entry, "HostapMgtFrameCtrl", wifi_vap_map->vap_array[vapArrayIndex].u.bss_info.hostap_mgt_frame_ctrl);
 
+        cJSON_AddBoolToObject(vb_entry, "MboEnabled",
+            wifi_vap_map->vap_array[vapArrayIndex].u.bss_info.mbo_enabled);
+
         cJSON *vapConnectionControl_o = cJSON_GetObjectItem(vb_entry, "VapConnectionControl");
         if (vapConnectionControl_o == NULL) {
             wifi_util_info_print(WIFI_CTRL, "vapConnectionContro param is not present\n");
