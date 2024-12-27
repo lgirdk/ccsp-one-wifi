@@ -97,6 +97,7 @@
 #define RSN_CIPHERSUITE_TKIP RSN_SELECTOR(0x00, 0x0f, 0xac, 2)
 #define RSN_CIPHERSUITE_CCMP_128 RSN_SELECTOR(0x00, 0x0f, 0xac, 4)
 #define RSN_CIPHERSUITE_BIP_CMAC_128 RSN_SELECTOR(0x00, 0x0f, 0xac, 6)
+#define RSN_CIPHERSUITE_GCMP_256 RSN_SELECTOR(0x00, 0x0f, 0xac, 9)
 
 #define RSN_SELECTOR_LEN 4
 
@@ -129,6 +130,7 @@ Licensed under the BSD-3 License
 #define RSN_AUTH_KEY_MGMT_FT_SAE RSN_SELECTOR(0x00, 0x0f, 0xac, 9)
 #define RSN_AUTH_KEY_MGMT_802_1X_SUITE_B_192 RSN_SELECTOR(0x00, 0x0f, 0xac, 12)
 #define RSN_AUTH_KEY_MGMT_FT_802_1X_SHA384 RSN_SELECTOR(0x00, 0x0f, 0xac, 13)
+#define RSN_AUTH_KEY_MGMT_SAE_EXT_KEY RSN_SELECTOR(0x00, 0x0f, 0xac, 24)
 
 struct rsn_data {
     uint8_t ver[2]; /* little endian */
@@ -2389,6 +2391,10 @@ get_key_mgmt(const uint8_t *s, char *key_mgmt_buff, size_t buff_size)
         strncpy(key_mgmt_buff, "sae", buff_size - 1);
         return;
     }
+    if (RSN_SELECTOR_GET(s) == RSN_AUTH_KEY_MGMT_SAE_EXT_KEY) {
+        strncpy(key_mgmt_buff, "sae-ext", buff_size - 1);
+        return;
+    }
     if (RSN_SELECTOR_GET(s) == RSN_AUTH_KEY_MGMT_FT_SAE) {
         strncpy(key_mgmt_buff, "ft-sae", buff_size - 1);
         return;
@@ -2417,6 +2423,10 @@ static void get_cipher_suite(const uint8_t *s, char *buff, size_t buff_size)
     }
     if (RSN_SELECTOR_GET(s) == RSN_CIPHERSUITE_BIP_CMAC_128) {
         strncpy(buff, "bip-cmac-128", buff_size - 1);
+        return;
+    }
+    if (RSN_SELECTOR_GET(s) == RSN_CIPHERSUITE_GCMP_256) {
+        strncpy(buff, "gcmp-256", buff_size - 1);
         return;
     }
 
