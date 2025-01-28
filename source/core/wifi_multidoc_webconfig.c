@@ -1087,12 +1087,6 @@ pErr wifi_vap_cfg_subdoc_handler(void *data)
             cJSON_AddStringToObject(PreAssocDeny, "MinimumAdvertisedMCS", wifi_vap_map->vap_array[vapArrayIndex].u.bss_info.preassoc.minimum_advertised_mcs);
             cJSON_AddStringToObject(PreAssocDeny, "6GOpInfoMinRate", wifi_vap_map->vap_array[vapArrayIndex].u.bss_info.preassoc.sixGOpInfoMinRate);
 
-            cJSON *TcmPreAssocDeny =  cJSON_AddObjectToObject(vapConnectionControl_o,"TcmPreAssociationDeny");
-            cJSON_AddNumberToObject(TcmPreAssocDeny, "TcmWaitTime", wifi_vap_map->vap_array[vapArrayIndex].u.bss_info.preassoc.time_ms);
-            cJSON_AddNumberToObject(TcmPreAssocDeny, "TcmMinMgmtFrames", wifi_vap_map->vap_array[vapArrayIndex].u.bss_info.preassoc.min_num_mgmt_frames);
-            cJSON_AddStringToObject(TcmPreAssocDeny, "TcmExpWeightage", wifi_vap_map->vap_array[vapArrayIndex].u.bss_info.preassoc.tcm_exp_weightage);
-            cJSON_AddStringToObject(TcmPreAssocDeny, "TcmGradientThreshold", wifi_vap_map->vap_array[vapArrayIndex].u.bss_info.preassoc.tcm_gradient_threshold);
-
             cJSON *PostAssocDeny =  cJSON_AddObjectToObject(vapConnectionControl_o,"PostAssociationDeny");
             cJSON_AddStringToObject(PostAssocDeny, "RssiUpThreshold", wifi_vap_map->vap_array[vapArrayIndex].u.bss_info.postassoc.rssi_up_threshold);
             cJSON_AddStringToObject(PostAssocDeny, "SnrThreshold", wifi_vap_map->vap_array[vapArrayIndex].u.bss_info.postassoc.snr_threshold);
@@ -1103,7 +1097,16 @@ pErr wifi_vap_cfg_subdoc_handler(void *data)
         else {
             wifi_util_info_print(WIFI_CTRL, "vapConnectionContro param is present in blob\n");
         }
-
+        
+        const cJSON *value = cJSON_GetObjectItem(vapConnectionControl_o, "TcmPreAssociationDeny");     
+        if ((value == NULL) || (cJSON_IsObject(value) == false))
+        {
+            cJSON *TcmPreAssocDeny =  cJSON_AddObjectToObject(vapConnectionControl_o,"TcmPreAssociationDeny");
+            cJSON_AddNumberToObject(TcmPreAssocDeny, "TcmWaitTime", wifi_vap_map->vap_array[vapArrayIndex].u.bss_info.preassoc.time_ms);
+            cJSON_AddNumberToObject(TcmPreAssocDeny, "TcmMinMgmtFrames", wifi_vap_map->vap_array[vapArrayIndex].u.bss_info.preassoc.min_num_mgmt_frames);
+            cJSON_AddStringToObject(TcmPreAssocDeny, "TcmExpWeightage", wifi_vap_map->vap_array[vapArrayIndex].u.bss_info.preassoc.tcm_exp_weightage);
+            cJSON_AddStringToObject(TcmPreAssocDeny, "TcmGradientThreshold", wifi_vap_map->vap_array[vapArrayIndex].u.bss_info.preassoc.tcm_gradient_threshold);
+        }
         /*
         Correct integrity of interworking field in the VAP object is very important. Let's check it here to avoid
         reporting code 300 (SUCCESS) for webconfig agent even if it's not correct.
