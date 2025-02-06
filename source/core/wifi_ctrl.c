@@ -407,6 +407,24 @@ unsigned int get_Uptime(void)
     return upSecs;
 }
 
+unsigned int dfs_fallback_channel(wifi_platform_property_t *wifi_prop, wifi_freq_bands_t wifi_band)
+{
+    unsigned int channel = 0;
+    int non_dfs_channel_list_5g[] = { 36, 40, 44, 48, 149, 153, 157, 161, 165 };
+    int num_channels = sizeof(non_dfs_channel_list_5g) / sizeof(non_dfs_channel_list_5g[0]);
+
+    for (int i = 0; i < num_channels; i++) {
+        if ((is_wifi_channel_valid(wifi_prop, wifi_band, non_dfs_channel_list_5g[i])) ==
+            RETURN_OK) {
+            channel = non_dfs_channel_list_5g[i];
+            break;
+        }
+    }
+    wifi_util_info_print(WIFI_CTRL, "%s:%d DFS Fallback channel for band %d is %d\n", __func__,
+        __LINE__, wifi_band, channel);
+    return channel;
+}
+
 int start_radios(rdk_dev_mode_type_t mode)
 {
     wifi_radio_operationParam_t *wifi_radio_oper_param = NULL;
@@ -414,65 +432,97 @@ int start_radios(rdk_dev_mode_type_t mode)
     uint8_t index = 0;
     uint8_t num_of_radios = getNumberRadios();
     wifi_ctrl_t *ctrl = (wifi_ctrl_t *)get_wifictrl_obj();
+    wifi_platform_property_t *wifi_prop = (wifi_platform_property_t *)get_wifi_hal_cap_prop();
 
-    wifi_util_info_print(WIFI_CTRL,"%s(): Start radios %d\n", __FUNCTION__, num_of_radios);
-    //Check for the number of radios
+    wifi_util_info_print(WIFI_CTRL, "%s(): Start radios %d\n", __FUNCTION__, num_of_radios);
+    // Check for the number of radios
     if (num_of_radios > MAX_NUM_RADIOS) {
-        wifi_util_error_print(WIFI_CTRL,"WIFI %s : Number of Radios %d exceeds supported %d Radios \n",__FUNCTION__, getNumberRadios(), MAX_NUM_RADIOS);
+        wifi_util_error_print(WIFI_CTRL,
+            "WIFI %s : Number of Radios %d exceeds supported %d Radios \n", __FUNCTION__,
+            getNumberRadios(), MAX_NUM_RADIOS);
         return RETURN_ERR;
     }
 
     for (index = 0; index < num_of_radios; index++) {
         wifi_radio_oper_param = (wifi_radio_operationParam_t *)get_wifidb_radio_map(index);
         if (wifi_radio_oper_param == NULL) {
-            wifi_util_error_print(WIFI_CTRL,"%s:wrong index for radio map: %d\n",__FUNCTION__, index);
+            wifi_util_error_print(WIFI_CTRL, "%s:wrong index for radio map: %d\n", __FUNCTION__,
+                index);
             return RETURN_ERR;
         }
 
-        wifi_util_dbg_print(WIFI_CTRL,"%s:index: %d num_of_radios:%d\n",__FUNCTION__, index, num_of_radios);
+        wifi_util_dbg_print(WIFI_CTRL, "%s:index: %d num_of_radios:%d\n", __FUNCTION__, index,
+            num_of_radios);
 
-        if((mode == rdk_dev_mode_type_ext) && (wifi_radio_oper_param->band == WIFI_FREQUENCY_2_4_BAND) && (wifi_radio_oper_param->channel != 1)) {
+        if ((mode == rdk_dev_mode_type_ext) &&
+            (wifi_radio_oper_param->band == WIFI_FREQUENCY_2_4_BAND) &&
+            (wifi_radio_oper_param->channel != 1)) {
             wifi_radio_oper_param->channel = 1;
-            wifi_util_dbg_print(WIFI_CTRL,"%s: initializing radio_index:%d with channel 1\n",__FUNCTION__, index);
+            wifi_util_dbg_print(WIFI_CTRL, "%s: initializing radio_index:%d with channel 1\n",
+                __FUNCTION__, index);
         }
 
         ctrl->acs_pending[index] = false;
         if (wifi_radio_oper_param->autoChannelEnabled == true) {
             ctrl->acs_pending[index] = true;
-            start_wifi_sched_timer(index, ctrl, wifi_acs_sched); //Starting the acs_scheduler
+            start_wifi_sched_timer(index, ctrl, wifi_acs_sched); // Starting the acs_scheduler
         }
 
-        //In case of reboot/FR, Non DFS channel will be selected and radio will switch to DFS Channel after 1 min.
-        if( (wifi_radio_oper_param->band == WIFI_FREQUENCY_5_BAND ) || ( wifi_radio_oper_param->band == WIFI_FREQUENCY_5L_BAND ) || ( wifi_radio_oper_param->band == WIFI_FREQUENCY_5H_BAND)) {
+        // In case of reboot/FR, Non DFS channel will be selected and radio will switch to DFS
+        // Channel after 1 min.
+        if ((wifi_radio_oper_param->band == WIFI_FREQUENCY_5_BAND) ||
+            (wifi_radio_oper_param->band == WIFI_FREQUENCY_5L_BAND) ||
+            (wifi_radio_oper_param->band == WIFI_FREQUENCY_5H_BAND)) {
             if (wifi_radio_oper_param->channel >= 52 && wifi_radio_oper_param->channel <= 144) {
-                if( mode == rdk_dev_mode_type_gw ) {
+                if (mode == rdk_dev_mode_type_gw) {
                     dfs_channel = wifi_radio_oper_param->channel;
                     wifi_radio_oper_param->channel = 44;
+                    if ((is_wifi_channel_valid(wifi_prop, wifi_radio_oper_param->band,
+                            wifi_radio_oper_param->channel)) != RETURN_OK) {
+                        wifi_radio_oper_param->channel = dfs_fallback_channel(wifi_prop,
+                            wifi_radio_oper_param->band);
+                    }
                     wifi_radio_oper_param->op_class = 1;
-                    wifi_util_info_print(WIFI_CTRL,"%s:%d Calling switch_dfs_channel for dfs_chan:%d \n",__func__, __LINE__, dfs_channel);
-                    scheduler_add_timer_task(ctrl->sched, TRUE, NULL, switch_dfs_channel, &dfs_channel, (60 * 1000), 1, FALSE);
+                    wifi_util_info_print(WIFI_CTRL,
+                        "%s:%d Calling switch_dfs_channel for dfs_chan:%d \n", __func__, __LINE__,
+                        dfs_channel);
+                    scheduler_add_timer_task(ctrl->sched, TRUE, NULL, switch_dfs_channel,
+                        &dfs_channel, (60 * 1000), 1, FALSE);
                 } else {
                     wifi_radio_oper_param->channel = 36;
+                    if ((is_wifi_channel_valid(wifi_prop, wifi_radio_oper_param->band,
+                            wifi_radio_oper_param->channel)) != RETURN_OK) {
+                        wifi_radio_oper_param->channel = dfs_fallback_channel(wifi_prop,
+                            wifi_radio_oper_param->band);
+                    }
                     wifi_radio_oper_param->op_class = 1;
                 }
             }
 
             if (strcmp(wifi_radio_oper_param->radarDetected, " ")) {
-                wifi_util_info_print(WIFI_CTRL,"%s:%d Triggering dfs_nop_start_timer for radar:%s \n",__func__, __LINE__, wifi_radio_oper_param->radarDetected);
-                scheduler_add_timer_task(ctrl->sched, FALSE, NULL, dfs_nop_start_timer, NULL, (60 * 1000), 1, FALSE);
+                wifi_util_info_print(WIFI_CTRL,
+                    "%s:%d Triggering dfs_nop_start_timer for radar:%s \n", __func__, __LINE__,
+                    wifi_radio_oper_param->radarDetected);
+                scheduler_add_timer_task(ctrl->sched, FALSE, NULL, dfs_nop_start_timer, NULL,
+                    (60 * 1000), 1, FALSE);
             }
         }
 
-        wifi_platform_property_t *wifi_prop =  (wifi_platform_property_t *) get_wifi_hal_cap_prop();
-        if ((wifi_radio_oper_param->EcoPowerDown == false) && (wifi_prop->radio_presence[index] == false)) {
-            wifi_util_error_print(WIFI_CTRL,"%s: !!!!-ALERT-!!!-Radio not present-!!!-Kernel driver interface down-!!!.Index %d\n",__FUNCTION__, index);
+        if ((wifi_radio_oper_param->EcoPowerDown == false) &&
+            (wifi_prop->radio_presence[index] == false)) {
+            wifi_util_error_print(WIFI_CTRL,
+                "%s: !!!!-ALERT-!!!-Radio not present-!!!-Kernel driver interface down-!!!.Index "
+                "%d\n",
+                __FUNCTION__, index);
         }
         ret = wifi_hal_setRadioOperatingParameters(index, wifi_radio_oper_param);
         if (ret != RETURN_OK) {
-            wifi_util_error_print(WIFI_CTRL,"%s: wifi radio parameter set failure: radio_index:%d\n",__FUNCTION__, index);
+            wifi_util_error_print(WIFI_CTRL,
+                "%s: wifi radio parameter set failure: radio_index:%d\n", __FUNCTION__, index);
             return ret;
         } else {
-            wifi_util_info_print(WIFI_CTRL,"%s: wifi radio parameter set success: radio_index:%d\n",__FUNCTION__, index);
+            wifi_util_info_print(WIFI_CTRL,
+                "%s: wifi radio parameter set success: radio_index:%d\n", __FUNCTION__, index);
         }
 
         startTime[index] = get_Uptime();
