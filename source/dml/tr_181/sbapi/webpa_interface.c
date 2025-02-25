@@ -18,7 +18,7 @@
  */
 
 #include "webpa_interface.h"
-#include "base64.h"
+#include <trower-base64/base64.h>
 #include "ccsp_dm_api.h"
 #include "collection.h"
 #include "cosa_apis.h"
