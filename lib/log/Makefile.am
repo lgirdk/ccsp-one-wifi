@@ -2,7 +2,7 @@
 # If not stated otherwise in this file or this component's LICENSE
 # file the following copyright and licenses apply:
 #
-# Copyright 2015 RDK Management
+# Copyright 2018 RDK Management
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@
 # limitations under the License.
 ##########################################################################
 
-AM_LDFLAGS += -lev
-
 CcspWifiSsp_CFLAGS += $(JOURNALCTL_ENABLE_FLAG)
 
 CcspWifiSsp_SOURCES += log.c log_syslog.c log_stdout.c log_traceback.c
@@ -28,4 +26,3 @@ CcspWifiSsp_SOURCES += log_journal.c
 endif
 
 CcspWifiSsp_LDFLAGS += -lev
-
