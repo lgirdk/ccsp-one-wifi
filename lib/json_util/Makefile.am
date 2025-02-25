@@ -2,7 +2,7 @@
 # If not stated otherwise in this file or this component's LICENSE
 # file the following copyright and licenses apply:
 #
-# Copyright 2015 RDK Management
+# Copyright 2018 RDK Management
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,13 +19,19 @@
 
 AM_CFLAGS = -DJSON_MEMDBG
 
-noinst_LTLIBRARIES=libCcspWifiAgent_jsutil.la
+noinst_LTLIBRARIES = libCcspWifiAgent_jsutil.la
+
+libCcspWifiAgent_jsutil_la_CPPFLAGS = -I$(top_srcdir)/source/WifiSsp/lib/common \
+                                      -I$(top_srcdir)/source/WifiSsp/lib/const \
+                                      -I$(top_srcdir)/source/WifiSsp/lib/ds \
+                                      -I$(top_srcdir)/source/WifiSsp/lib/inc \
+                                      -I$(top_srcdir)/source/WifiSsp/lib/log \
+                                      -I$(top_srcdir)/source/WifiSsp/lib/osa \
+                                      -I$(top_srcdir)/source/WifiSsp/lib/ovsdb \
+                                      -I$(top_srcdir)/source/WifiSsp/lib/pjs \
+                                      -I$(top_srcdir)/source/WifiSsp/lib/qm \
+                                      -I$(top_srcdir)/source/WifiSsp/lib/schema
 
 libCcspWifiAgent_jsutil_la_SOURCES = string.c memdbg.c future.c
 
-libCcspWifiAgent_jsutil_la_CPPFLAGS = -I$(top_srcdir)/source/WifiSsp/lib/common -I$(top_srcdir)/source/WifiSsp/lib/const -I$(top_srcdir)/source/WifiSsp/lib/ds -I$(top_srcdir)/source/WifiSsp/lib/inc -I$(top_srcdir)/source/WifiSsp/lib/log -I$(top_srcdir)/source/WifiSsp/lib/osa -I$(top_srcdir)/source/WifiSsp/lib/ovsdb -I$(top_srcdir)/source/WifiSsp/lib/pjs -I$(top_srcdir)/source/WifiSsp/lib/qm -I$(top_srcdir)/source/WifiSsp/lib/schema
-
 libCcspWifiAgent_jsutil_la_LDFLAGS = -ljansson
-
-
-
