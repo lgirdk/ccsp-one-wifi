@@ -28,7 +28,7 @@
 #include "stdlib.h"
 #include "wifi_ctrl.h"
 #include "wifi_util.h"
-#include <libparodus.h>
+#include <libparodus/libparodus.h>
 #include <math.h>
 #include <syscfg/syscfg.h>
 #include <sysevent/sysevent.h>
