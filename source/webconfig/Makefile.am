@@ -17,7 +17,7 @@
 # limitations under the License.
 ##########################################################################
 
-if LIBWEBCONFIG
+if WITH_LIBWEBCONFIG
 
 ACLOCAL_AMFLAGS = -I m4
 
