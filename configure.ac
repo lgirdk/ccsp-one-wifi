@@ -41,16 +41,14 @@ AC_ARG_ENABLE([gtestapp],
 AM_CONDITIONAL([WITH_GTEST_SUPPORT], [test x$GTEST_SUPPORT_ENABLED = xtrue])
 
 AC_ARG_ENABLE([libwebconfig],
-             AS_HELP_STRING([--enable-libwebconfig],[enable libwebconfig (default is no)]),
+             AS_HELP_STRING([--enable-libwebconfig],[enable builtin libwebconfig (default is no)]),
              [
               case "${enableval}" in
                yes) LIBWEBCONFIG_ENABLED=true
                     m4_if(m4_sysval,[0],[AC_CONFIG_FILES([source/webconfig/Makefile])]);;
                no) LIBWEBCONFIG_ENABLED=false;;
-               *) AC_MSG_ERROR([bad value ${enableval} for --enable-gtestapp ]);;
+               *) AC_MSG_ERROR([bad value ${enableval} for --enable-libwebconfig]);;
               esac
-              # LIBWEBCONFIG_ENABLED=true
-              # m4_if(m4_sysval,[0],[AC_CONFIG_FILES([source/webconfig/Makefile])])
              ],
              [echo "libwebconfig is disabled"])
 AM_CONDITIONAL([WITH_LIBWEBCONFIG], [test x$LIBWEBCONFIG_ENABLED = xtrue])
@@ -106,15 +104,6 @@ AM_CONDITIONAL([EASYCONNECT_SUPPORT], [test x$EASYCONNECT_SUPPORT_ENABLE = xtrue
 AM_CONDITIONAL([HAL_IPC], [test x$HAL_IPC = xtrue])
 AM_CONDITIONAL([ONEWIFI_CAC_APP_SUPPORT], [test x$ONEWIFI_CAC_APP_SUPPORT = xtrue])
 AM_CONDITIONAL([ONEWIFI_DML_SUPPORT], [test x$ONEWIFI_DML_SUPPORT_MAKEFILE = xtrue])
-
-AC_ARG_ENABLE([libwebconfig],
-             [  --enable-libwebconfig    Turn on building libwebconfig, otherwise link against sysroot],
-             [case "${enableval}" in
-                yes) libwebconfig=true ;;
-                 no) libwebconfig=false ;;
-                  *) AC_MSG_ERROR([bad value ${enableval} for --enable-libwebconfig]) ;;
-            esac],[libwebconfig=true])
-AM_CONDITIONAL([LIBWEBCONFIG], [test x$libwebconfig = xtrue])
 
 AC_ARG_ENABLE([rdk-wifi-libhostap],
     [AS_HELP_STRING([--enable-rdk-wifi-libhostap],[enable])],
