@@ -19,17 +19,6 @@
 if LIBWEBCONFIG
 AM_CFLAGS = -D_ANSC_LINUX
 AM_CFLAGS += -D_ANSC_USER
-if CCSP_ARCH_ARM
-AM_CFLAGS += -D_ANSC_LITTLE_ENDIAN_
-endif
-
-if CCSP_ARCH_ATOM
-AM_CFLAGS += -D_ANSC_LITTLE_ENDIAN_
-endif
-
-if CCSP_ARCH_PC
-AM_CFLAGS += -D_ANSC_LITTLE_ENDIAN_
-endif
 
 AM_LDFLAGS =  -L$(top_builddir)/../hal/lib
 AM_LDFLAGS += -lwebconfig_framework

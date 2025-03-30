@@ -19,17 +19,6 @@
 
 AM_CFLAGS = -D_ANSC_LINUX
 AM_CFLAGS += -D_ANSC_USER
-if CCSP_ARCH_ARM
-AM_CFLAGS += -D_ANSC_LITTLE_ENDIAN_
-endif
-
-if CCSP_ARCH_ATOM
-AM_CFLAGS += -D_ANSC_LITTLE_ENDIAN_
-endif
-
-if CCSP_ARCH_PC
-AM_CFLAGS += -D_ANSC_LITTLE_ENDIAN_
-endif
 
 AM_CFLAGS += -Wno-poison-system-directories -Wall -Werror -Wextra -Wno-unused-parameter -Wno-pointer-sign -Wno-sign-compare -Wno-type-limits -Wno-format-truncation
 AM_CPPFLAGS = -Wall -Werror

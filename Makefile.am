@@ -29,14 +29,6 @@ if ONEWIFI_DML_SUPPORT
 libwifi_la_CPPFLAGS += -I$(top_srcdir)/source/dml/tr_181/ml -I$(top_srcdir)/source/dml/tr_181/sbapi -I$(top_srcdir)/include/tr_181/ml
 endif
 
-if CCSP_ARCH_ARM
-libwifi_la_CPPFLAGS += -D_ANSC_LITTLE_ENDIAN_
-endif
-
-if CCSP_ARCH_ATOM
-libwifi_la_CPPFLAGS += -D_ANSC_LITTLE_ENDIAN_
-endif
-
 libwifi_la_LDFLAGS=
 libwifi_la_SOURCES=
 
