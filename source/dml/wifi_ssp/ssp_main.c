@@ -333,14 +333,6 @@ void sig_handler(int sig)
     else if ( sig == SIGUSR1 ) {
     	signal(SIGUSR1, sig_handler); /* reset it to this function */
     	CcspTraceInfo(("SIGUSR1 received!\n"));
-	#ifndef DISABLE_LOGAGENT
-/*
-	RDKLogEnable = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LoggerEnable");
-	RDKLogLevel = (char)GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LogLevel");
-	WiFi_RDKLogLevel = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_WiFi_LogLevel");
-	WiFi_RDKLogEnable = (char)GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_WiFi_LoggerEnable");
-*/
-	#endif
     }
     else if ( sig == SIGUSR2 ) {
     	CcspTraceInfo(("SIGUSR2 received!\n"));
